@@ -244,7 +244,8 @@ async def activate(ctx, pswd:int):
 @client.slash_command(guild_ids=[guild])
 async def getnext(ctx):
     embed = discord.Embed(title="Next @everyone", description="The next @everyone will be sent at:", color=0x00ff00)
-    embed.add_field(name="Time", value=f"`{formatTime(nextSend - time.time())}`", inline=False)
+    embed.add_field(name="Time", value=f"`{formatTime(nextSend - time.time())}`", inline=True)
+    embed.add_field(name="Time of day", value=f"`{time.strftime('%H:%M:%S', time.localtime(nextSend))}`", inline=False)
     await ctx.respond(embed=embed, ephemeral=True)
 
 
@@ -268,7 +269,7 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
                 await asyncio.sleep(hours * 3600)
             else:
                 # uses the time since the last @everyone to calculate the next @everyone
-                seconds = (hours * 3600) - (time.time() - lastSend)
+                seconds = calculateNextTime()
                 logf("sending again in " + str(seconds) + " seconds")
                 
                 await asyncio.sleep(seconds)
@@ -284,6 +285,25 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
         for i in range(times):
             await channel.send(message)
             await asyncio.sleep(hours * 3600)
+
+def calculateNextTime():
+    # will return a time in seconds to wait for
+    # it should be between 10am and midnight, and should be random
+    # needs to be a time to wait for, not a time to send at
+
+    if lastSend == 0:
+        return random.uniform(10, 24) * 3600
+
+    # uses the time since the last @everyone to calculate the next @everyone
+    return random.uniform(10, 24) * 3600 - (time.time() - lastSend)
+
+
+@client.slash_command(guild_ids=[guild])
+async def get(ctx):
+    t = calculateNextTime()
+
+
+
 
 
 @client.slash_command(guild_ids=[guild])
