@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio, random
 import time
 import builtins
+import datetime
 
 
 # config vars
@@ -208,7 +209,18 @@ async def dmUser(id, message, embed=False):
 @client.slash_command(guild_ids=[guild])
 async def pay(ctx, user:discord.User, ammount:int):
     if userInList(ctx.author.id):
+        if (ctx.author.id == user.id):
+            embed = discord.Embed(title="Points", description=f"You can't pay yourself", color=0x00ff00)
+            await ctx.respond(embed=embed, ephemeral=True)
+            return
+        
+        if (ammount <= 0):
+            embed = discord.Embed(title="Points", description=f"You can't pay negative chesta points", color=0x00ff00)
+            await ctx.respond(embed=embed, ephemeral=True)
+            return
+
         if getUser(ctx.author.id).points >= ammount:
+            
             getUser(ctx.author.id).removePoints(ammount)
             grantPoints(user.id, ammount)
             embed = discord.Embed(title="Points", description=f"Sent `{ammount}` chesta points to `{user.name}`", color=0x00ff00)
@@ -254,6 +266,31 @@ def resetAtEveryone():
         user.hasAtEveryoed = False
 
 
+def getWaitTime():
+    # Convert last_send to a datetime object
+    last_send_time = datetime.datetime.fromtimestamp(lastSend)
+
+    # Set the start time to 10 am
+    start_time = datetime.datetime(last_send_time.year, last_send_time.month, last_send_time.day + 1, 10, 0, 0)
+
+    # Set the end time to midnight
+    end_time = datetime.datetime(last_send_time.year, last_send_time.month, last_send_time.day + 1, 23, 59, 59)
+
+    # Calculate the time difference between start and end time
+    time_diff = end_time - start_time
+
+    # Generate a random number of seconds within the time difference
+    random_seconds = random.randint(0, time_diff.total_seconds())
+
+    # Calculate the random time
+    random_time = start_time + datetime.timedelta(seconds=random_seconds)
+
+    # Calculate the time difference between the last send time and the random time
+    time_until_random_time = random_time - last_send_time
+
+    # Return the time difference in seconds
+    return int(time_until_random_time.total_seconds())
+
 async def scheduleTimedMessage(channel, timeRange, message, times=-1):
     global lastSend, nextSend
     if (times == -1):
@@ -278,6 +315,8 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
                 saveAteveryoneTime()
                 resetAtEveryone()
                 await channel.send(message)
+
+
             
 
 
@@ -345,14 +384,17 @@ async def top(ctx):
 
 @client.slash_command(guild_ids=[guild])
 async def invoke(ctx):
+
     global lastSend, nextSend
-    print("dawd")
+    return
+    resetAtEveryone()
     logf("invoked @everyone", 'i')
+    channel = client.get_channel(atEveryoneChannel)
+    await channel.send("DAILY @everyone")
+    lastSend = time.time()
+    nextSend = calculateNextTime() + lastSend
+    saveAteveryoneTime()
     
-    embed = discord.Embed(title="Points", description=f"+15 chesta points for `{ctx.author.name}`", color=0x00ff00)
-    await ctx.respond(embed=embed, ephemeral=True)
-    getUser(ctx.author.id).hasAtEveryoed = True
-    grantPoints(ctx.author.id, 15)
 
 def saveAteveryoneTime():
     logf("saving data")
@@ -431,6 +473,7 @@ async def awaitBetResponse(bet):
 
 @client.slash_command(guild_ids=[guild])
 async def bet(ctx, user:discord.Member, ammount:int):
+    logf("user " + ctx.author.name + " challanged " + user.name + " for " + str(ammount) + " points")
 
     if (ammount <= 0):
         embed = discord.Embed(title="Points", description=f"You can't challange with negative chesta points", color=0x00ff00)
@@ -490,7 +533,7 @@ async def on_ready():
 
     loadUserData()
     asyncio.create_task(watchForUserUpdate())
-    asyncio.create_task(scheduleTimedMessage(client.get_channel(atEveryoneChannel), (19, 27), "DAILY @everyone"))
+    asyncio.create_task(scheduleTimedMessage(client.get_channel(atEveryoneChannel), (19, 24), "DAILY @everyone"))
 
 def atExit():
     logf("saving data")
