@@ -16,6 +16,7 @@ offlineTimeout = 10
 
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
+builtins.debug = True
 
 users = []
 
@@ -43,8 +44,10 @@ class User():
     def appendBet(self, bet):
         logf(f"appending bet {bet.challanger.name} -> {bet.challangee.name}")
         self.bets.append(bet)
+        print(len(self.bets))
 
     def getNextBet(self):
+        print(self.bets.challanegr.name)
         next = self.bets[0]
         self.bets.remove(next)
         return next
@@ -386,7 +389,8 @@ async def top(ctx):
 async def invoke(ctx):
 
     global lastSend, nextSend
-    return
+    if (not builtins.debug):
+        return
     resetAtEveryone()
     logf("invoked @everyone", 'i')
     channel = client.get_channel(atEveryoneChannel)
@@ -394,7 +398,20 @@ async def invoke(ctx):
     lastSend = time.time()
     nextSend = calculateNextTime() + lastSend
     saveAteveryoneTime()
-    
+
+
+
+
+@client.slash_command(guild_ids=[guild])
+async def setpoints(ctx, user : discord.Member, points:int):
+    if (not builtins.debug):
+        return
+
+
+    getUser(user.id).points = points
+    saveUserData()
+    embed = discord.Embed(title="Points", description=f"`{user.name}` now has `{points}` points", color=0x00ff00)
+    await ctx.respond(embed=embed, ephemeral=True)
 
 def saveAteveryoneTime():
     logf("saving data")
@@ -408,32 +425,51 @@ def saveAteveryoneTime():
 
 def loadLastSend():
     global lastSend, nextSend
-    with open('data.json') as f:
-        j = json.load(f)
-        lastSend = j['lastSend']
-        nextSend = j['nextSend']
-        logf("lastSend loaded: " + str(lastSend))
-        f.close()
-    
+    try:
+        with open('data.json') as f:
+            j = json.load(f)
+            lastSend = j['lastSend']
+            nextSend = j['nextSend']
+            logf("lastSend loaded: " + str(lastSend))
+            f.close()
+    except:
+        saveAteveryoneTime()
 
+async def randomChestaPoints(user):
+    print()
+    
+usersLeft = 5
 @client.event
 async def on_message(message):
 
     if message.author == client.user:
-        return
+        
+    n = random.randint(0, 100)
+    if num > 50:
+        grantPoints(message.author.id, 1)
+    
     
     # if the message contains @everyone
     if "@everyone" in message.content:
         # checks if its been more than 15 minuites since the last @everyone
         if (getUser(message.author.id).hasAtEveryoed == False):
-            if (time.time() - lastSend) > (5 * 60):
-                pass
-            else:
-                embed = discord.Embed(title="Points", description=f"+15 chesta points for `{message.author.name}`", color=0x00ff00)
+            embed = discord.Embed(title="Points", description=f"+15 chesta points for `{message.author.name}`", color=0x00ff00)
 
-                await message.channel.send(embed=embed)
-                getUser(message.author.id).hasAtEveryoed = True
-                grantPoints(message.author.id, 15)
+            await message.channel.send(embed=embed)
+            getUser(message.author.id).hasAtEveryoed = True
+            points = 0
+            if (usersLeft == 5):
+                points = 100
+            elif (usersLeft == 4):
+                points = 75
+            elif (usersLeft == 3):
+                points = 50
+            elif (usersLeft == 2):
+                points = 25
+            elif (usersLeft == 1):
+                points = 10
+
+            grantPoints(message.author.id, points)
 
     await client.process_application_commands(message)
     await client.process_commands(message)
@@ -443,7 +479,7 @@ async def on_message(message):
 async def acceptbet(ctx):
     user = getUser(ctx.author.id)
 
-    if len(user.bets) > 0:
+    if user.bets != []:
         bet = user.getNextBet()
         bet.accepted = True
         embed = discord.Embed(title="Bet", description=f"You have accepted the bet", color=0x00ff00)
@@ -451,6 +487,11 @@ async def acceptbet(ctx):
 
 
     else:
+        print(user.bets)
+        print(user.name)
+        print(user.bets == [])
+        print(type(user.bets))
+        print(len(user.bets))
         embed = discord.Embed(title="Bet", description=f"You have no bets to accept", color=0x00ff00)
         await ctx.respond(embed=embed, ephemeral=True)
 
@@ -488,6 +529,19 @@ async def bet(ctx, user:discord.Member, ammount:int):
             await ctx.respond(embed=embed)
             bet = Bet(ctx.author, user, ammount)
             await awaitBetResponse(bet)
+            embed = discord.Embed(title="Bet", description=f"Bet accepted, waiting for the result", color=0x00ff00)
+            await ctx.respond(embed=embed, ephemeral=True)
+            r = random.randint(0, 100)
+            if r > 50:
+                getUser(ctx.author.id).addPoints(ammount)
+                getUser(user.id).removePoints(ammount)
+                embed = discord.Embed(title="Points", description=f"`{ctx.author.name}` won `{ammount}` chesta points", color=0x00ff00)
+                await ctx.respond(embed=embed)
+            else:
+                getUser(ctx.author.id).removePoints(ammount)
+                getUser(user.id).addPoints(ammount)
+                embed = discord.Embed(title="Points", description=f"`{user.name}` won `{ammount}` chesta points", color=0x00ff00)
+                await ctx.respond(embed=embed)
 
 
 
@@ -495,29 +549,34 @@ async def bet(ctx, user:discord.Member, ammount:int):
             embed = discord.Embed(title="Points", description=f"They don't have enough chesta points(poor)", color=0x00ff00)
             await ctx.respond(embed=embed, ephemeral=True)
 
+    else:
+        embed = discord.Embed(title="Points", description=f"They don't have enough chesta points(poor)", color=0x00ff00)
+        await ctx.respond(embed=embed, ephemeral=True)
+
     
 
 
 
 @client.slash_command(guild_ids=[guild])
-async def flip_coin(ctx, ammount:int):
+async def coinflip(ctx, ammount:int):
     if userInList(ctx.author.id):
         if getUser(ctx.author.id).points >= ammount:
             r = random.randint(0, 100)
             if r > 55:
                 getUser(ctx.author.id).addPoints(ammount)
                 embed = discord.Embed(title="Points", description=f"You won `{ammount}` chesta points", color=0x00ff00)
-                await ctx.respond(embed=embed, ephemeral=True)
+                await ctx.respond(embed=embed)
             else:
                 getUser(ctx.author.id).removePoints(ammount)
                 embed = discord.Embed(title="Points", description=f"You lost `{ammount}` chesta points", color=0x00ff00)
-                await ctx.respond(embed=embed, ephemeral=True)
+                await ctx.respond(embed=embed)
         else:
             embed = discord.Embed(title="Points", description=f"You don't have enough chesta points", color=0x00ff00)
             await ctx.respond(embed=embed, ephemeral=True)
     else:
         embed = discord.Embed(title="Points", description=f"You don't have enough chesta points", color=0x00ff00)
         await ctx.respond(embed=embed, ephemeral=True)
+
 
 
 @client.event
