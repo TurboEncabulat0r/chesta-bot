@@ -177,10 +177,17 @@ except:
 builtins.guild = guild
 
 # import all modules here
-import stocks
+#import stocks
+#import gambling
 
 
-def formatTime(seconds):
+def formatTime(seconds, internal=False):
+    if internal:
+            hours = int(seconds // 3600)
+            seconds -= hours * 3600
+            minutes = int(seconds // 60)
+            seconds -= minutes * 60
+            return [hours, minutes, seconds]
     hours = int(seconds // 3600)
     seconds -= hours * 3600
     minutes = int(seconds // 60)
@@ -260,7 +267,7 @@ async def activate(ctx, pswd:int):
 async def getnext(ctx):
     embed = discord.Embed(title="Next @everyone", description="The next @everyone will be sent at:", color=0x00ff00)
     embed.add_field(name="Time", value=f"`{formatTime(nextSend - time.time())}`", inline=True)
-    embed.add_field(name="Time of day", value=f"`{time.strftime('%H:%M:%S', time.localtime(nextSend))}`", inline=False)
+    embed.add_field(name="Time of day", value=f"`{datetime.datetime.fromtimestamp(nextSend).strftime('%I:%M %p')}`", inline=True)
     await ctx.respond(embed=embed, ephemeral=True)
 
 
@@ -270,29 +277,23 @@ def resetAtEveryone():
 
 
 def getWaitTime():
-    # Convert last_send to a datetime object
-    last_send_time = datetime.datetime.fromtimestamp(lastSend)
+    # gets the seconds till midnight tonight
+    # then takes a random number between 10 and 20
+    # then multiplies that by the number of seconds in a day
+    # the goal is to have the time @everyone is sent to be a random time between 10am and 12pm
+    timeTillMidnight = (datetime.datetime.combine(datetime.date.today(), datetime.time.max) - datetime.datetime.now()).total_seconds()
+    hours = random.uniform(10, 12)
+    return (hours * 3600) + timeTillMidnight
 
-    # Set the start time to 10 am
-    start_time = datetime.datetime(last_send_time.year, last_send_time.month, last_send_time.day + 1, 10, 0, 0)
-
-    # Set the end time to midnight
-    end_time = datetime.datetime(last_send_time.year, last_send_time.month, last_send_time.day + 1, 23, 59, 59)
-
-    # Calculate the time difference between start and end time
-    time_diff = end_time - start_time
-
-    # Generate a random number of seconds within the time difference
-    random_seconds = random.randint(0, time_diff.total_seconds())
-
-    # Calculate the random time
-    random_time = start_time + datetime.timedelta(seconds=random_seconds)
-
-    # Calculate the time difference between the last send time and the random time
-    time_until_random_time = random_time - last_send_time
-
-    # Return the time difference in seconds
-    return int(time_until_random_time.total_seconds())
+if (builtins.debug):
+    @client.slash_command(guild_ids=[guild])
+    async def recalctime(ctx):
+        global nextSend
+        nextSend = getWaitTime() + time.time()
+        embed = discord.Embed(title="Next @everyone", description="The next @everyone will be sent at:", color=0x00ff00)
+        embed.add_field(name="Time", value=f"`{formatTime(nextSend - time.time())}`", inline=True)
+        embed.add_field(name="Time of day", value=f"`{datetime.datetime.fromtimestamp(nextSend).strftime('%I:%M %p')}`", inline=True)
+        await ctx.respond(embed=embed, ephemeral=True)
 
 async def scheduleTimedMessage(channel, timeRange, message, times=-1):
     global lastSend, nextSend
@@ -309,7 +310,7 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
                 await asyncio.sleep(hours * 3600)
             else:
                 # uses the time since the last @everyone to calculate the next @everyone
-                seconds = calculateNextTime()
+                seconds = getWaitTime()
                 logf("sending again in " + str(seconds) + " seconds")
                 
                 await asyncio.sleep(seconds)
@@ -328,26 +329,6 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
             await channel.send(message)
             await asyncio.sleep(hours * 3600)
 
-def calculateNextTime():
-    # will return a time in seconds to wait for
-    # it should be between 10am and midnight, and should be random
-    # needs to be a time to wait for, not a time to send at
-
-    if lastSend == 0:
-        return random.uniform(10, 24) * 3600
-
-    # uses the time since the last @everyone to calculate the next @everyone
-    return random.uniform(10, 24) * 3600 - (time.time() - lastSend)
-
-
-@client.slash_command(guild_ids=[guild])
-async def get(ctx):
-    t = calculateNextTime()
-
-
-
-
-
 @client.slash_command(guild_ids=[guild])
 async def getpoints(ctx, user: discord.Member = None):
     if user == None:
@@ -358,6 +339,7 @@ async def getpoints(ctx, user: discord.Member = None):
     else:
         embed = discord.Embed(title="Points", description=f"`{user.name}` has `0` points", color=0x00ff00)
         await ctx.respond(embed=embed, ephemeral=True)
+
 
 @client.slash_command(guild_ids=[guild])
 async def top(ctx):
@@ -384,34 +366,28 @@ async def top(ctx):
         embed.add_field(name=f"{i+1}. {sortedUsers[i].name}", value=f"`{sortedUsers[i].points}`", inline=False)
     await ctx.respond(embed=embed, ephemeral=True)
 
+if (builtins.debug):
+    @client.slash_command(guild_ids=[guild])
+    async def invoke(ctx):
 
-@client.slash_command(guild_ids=[guild])
-async def invoke(ctx):
+        global lastSend, nextSend
+        resetAtEveryone()
+        logf("invoked @everyone", 'i')
+        channel = client.get_channel(atEveryoneChannel)
+        await channel.send("DAILY @everyone")
+        lastSend = time.time()
+        nextSend = getWaitTime() + lastSend
+        saveAteveryoneTime()
 
-    global lastSend, nextSend
-    if (not builtins.debug):
-        return
-    resetAtEveryone()
-    logf("invoked @everyone", 'i')
-    channel = client.get_channel(atEveryoneChannel)
-    await channel.send("DAILY @everyone")
-    lastSend = time.time()
-    nextSend = calculateNextTime() + lastSend
-    saveAteveryoneTime()
-
-
-
-
-@client.slash_command(guild_ids=[guild])
-async def setpoints(ctx, user : discord.Member, points:int):
-    if (not builtins.debug):
-        return
+if (builtins.debug):
+    @client.slash_command(guild_ids=[guild])
+    async def setpoints(ctx, user : discord.Member, points:int):
 
 
-    getUser(user.id).points = points
-    saveUserData()
-    embed = discord.Embed(title="Points", description=f"`{user.name}` now has `{points}` points", color=0x00ff00)
-    await ctx.respond(embed=embed, ephemeral=True)
+        getUser(user.id).points = points
+        saveUserData()
+        embed = discord.Embed(title="Points", description=f"`{user.name}` now has `{points}` points", color=0x00ff00)
+        await ctx.respond(embed=embed, ephemeral=True)
 
 def saveAteveryoneTime():
     logf("saving data")
@@ -434,28 +410,37 @@ def loadLastSend():
             f.close()
     except:
         saveAteveryoneTime()
-
-async def randomChestaPoints(user):
-    print()
     
 usersLeft = 5
 @client.event
 async def on_message(message):
 
     if message.author == client.user:
+        return
         
     n = random.randint(0, 100)
-    if num > 50:
-        grantPoints(message.author.id, 1)
+    if n < 8:
+        embed = discord.Embed(title="Points", description=f"+5 chesta points for `{message.author.name}`", color=0x00ff00)
+        await message.channel.send(embed=embed)
+        
+        grantPoints(message.author.id, 5)
+    elif n == 34:
+        n = random.randint(0, 100)
+        if n < 25:
+            embed = discord.Embed(title="THE RICHEST  IN THE WORLD", description=f"+500 chesta points for `{message.author.name}` @everyone", color=0x00ff00)
+            await message.channel.send(embed=embed)
+            grantPoints(message.author.id, 10)
+        else:
+            embed = discord.Embed(title="FOUR QUARTERS?", description=f"+135 chesta points for `{message.author.name}`", color=0x00ff00)
+            await message.channel.send(embed=embed)
+            grantPoints(message.author.id, 10)
     
     
     # if the message contains @everyone
     if "@everyone" in message.content:
         # checks if its been more than 15 minuites since the last @everyone
         if (getUser(message.author.id).hasAtEveryoed == False):
-            embed = discord.Embed(title="Points", description=f"+15 chesta points for `{message.author.name}`", color=0x00ff00)
 
-            await message.channel.send(embed=embed)
             getUser(message.author.id).hasAtEveryoed = True
             points = 0
             if (usersLeft == 5):
@@ -468,7 +453,9 @@ async def on_message(message):
                 points = 25
             elif (usersLeft == 1):
                 points = 10
+            embed = discord.Embed(title="Points", description=f"+{points} chesta points for `{message.author.name}`", color=0x00ff00)
 
+            await message.channel.send(embed=embed)
             grantPoints(message.author.id, points)
 
     await client.process_application_commands(message)
