@@ -16,7 +16,7 @@ offlineTimeout = 10
 
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
-builtins.debug = True
+builtins.debug = False
 
 users = []
 
@@ -453,6 +453,7 @@ async def on_message(message):
                 points = 25
             elif (usersLeft == 1):
                 points = 10
+            usersLeft -= 1
             embed = discord.Embed(title="Points", description=f"+{points} chesta points for `{message.author.name}`", color=0x00ff00)
 
             await message.channel.send(embed=embed)
