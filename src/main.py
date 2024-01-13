@@ -16,7 +16,7 @@ offlineTimeout = 10
 
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
-builtins.debug = False
+builtins.debug = True
 
 users = []
 
@@ -156,6 +156,7 @@ try:
         token = config['token']
         userId = config['userId']
         guild = config['guild']
+        builtins.debug = config['debug']
         inactiveRole = config['inactiveRole']
         offlineTimeout = config['offlineTimeout']
         atEveryoneChannel = config['atEveryoneChannel']
@@ -166,6 +167,7 @@ except:
             "token": token,
             "userId": userId,
             "guild": guild,
+            "debug": builtins.debug,
             "inactiveRole": inactiveRole,
             "offlineTimeout": offlineTimeout,
             "atEveryoneChannel": atEveryoneChannel
@@ -282,7 +284,7 @@ def getWaitTime():
     # then multiplies that by the number of seconds in a day
     # the goal is to have the time @everyone is sent to be a random time between 10am and 12pm
     timeTillMidnight = (datetime.datetime.combine(datetime.date.today(), datetime.time.max) - datetime.datetime.now()).total_seconds()
-    hours = random.uniform(10, 12)
+    hours = random.uniform(10, 22)
     return (hours * 3600) + timeTillMidnight
 
 if (builtins.debug):
@@ -299,15 +301,16 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
     global lastSend, nextSend
     if (times == -1):
         while True:
-            hours = random.uniform(timeRange[0], timeRange[1])
-            if lastSend == 0:
-                logf("sending again in " + str(hours * 3600) + " seconds")
+            if lastSend <= 40:
                 lastSend = time.time()
-                nextSend = (hours * 3600) + lastSend
+                wtime = getWaitTime()
+                nextSend = wtime + time.time()
                 saveAteveryoneTime()
                 resetAtEveryone()
                 await channel.send(message)
-                await asyncio.sleep(hours * 3600)
+                logf("sending again in " + str(wtime / 60) + " minuites")
+                await asyncio.sleep(wtime)
+
             else:
                 # uses the time since the last @everyone to calculate the next @everyone
                 seconds = getWaitTime()
@@ -315,7 +318,7 @@ async def scheduleTimedMessage(channel, timeRange, message, times=-1):
                 
                 await asyncio.sleep(seconds)
                 lastSend = time.time()
-                nextSend = (hours * 3600) + lastSend
+                nextSend = getWaitTime() + time.time()
                 saveAteveryoneTime()
                 resetAtEveryone()
                 await channel.send(message)
@@ -414,34 +417,39 @@ def loadLastSend():
 usersLeft = 5
 @client.event
 async def on_message(message):
-
+    global usersLeft, lastSend, nextSend
     if message.author == client.user:
         return
         
     n = random.randint(0, 100)
-    if n < 8:
+    if n < 5:
+        grantPoints(message.author.id, 5)
         embed = discord.Embed(title="Points", description=f"+5 chesta points for `{message.author.name}`", color=0x00ff00)
         await message.channel.send(embed=embed)
         
-        grantPoints(message.author.id, 5)
+        
     elif n == 34:
         n = random.randint(0, 100)
-        if n < 25:
+        if n == 34:
             embed = discord.Embed(title="THE RICHEST  IN THE WORLD", description=f"+500 chesta points for `{message.author.name}` @everyone", color=0x00ff00)
             await message.channel.send(embed=embed)
-            grantPoints(message.author.id, 10)
-        else:
-            embed = discord.Embed(title="FOUR QUARTERS?", description=f"+135 chesta points for `{message.author.name}`", color=0x00ff00)
-            await message.channel.send(embed=embed)
-            grantPoints(message.author.id, 10)
+            grantPoints(message.author.id, 500)
     
     
     # if the message contains @everyone
     if "@everyone" in message.content:
         # checks if its been more than 15 minuites since the last @everyone
         if (getUser(message.author.id).hasAtEveryoed == False):
-
-            getUser(message.author.id).hasAtEveryoed = True
+            if (not builtins.debug):
+                getUser(message.author.id).hasAtEveryoed = True
+            
+            #if its been 30 minuites since the last @everyone
+            if (time.time() - lastSend > 1800):
+                return
+            
+            if (usersLeft <= 0):
+                return
+            
             points = 0
             if (usersLeft == 5):
                 points = 100
