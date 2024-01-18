@@ -65,6 +65,13 @@ def loadUserData():
     users = tmp
     logf(f"loaded {num} users")
 
+async def grabAllUsers():
+    # registers all the users in the guild
+    global users
+    for user in guild.members:
+        if not userInList(user.id):
+            registerUser(user.id)
+
 async def grantMoneyAll(dm=False):
     global users
     for user in users:

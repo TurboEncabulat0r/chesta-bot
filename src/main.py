@@ -93,6 +93,10 @@ async def dev(ctx, args:str):
         if (args[2] == "-a"):
             channel = client.get_channel(atEveryoneChannel)
             await channel.send(f"CHESTA STONE STIMULUS, EVERYONE GETS {money} CP @everyone ")
+
+    if(args[0] == "grabUsers"):
+        await users.grabAllUsers()
+        await ctx.respond("done", ephemeral=True)
         
 
 
