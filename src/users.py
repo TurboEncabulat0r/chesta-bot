@@ -73,12 +73,13 @@ async def grabAllUsers():
         if not userInList(user.id):
             registerUser(user.id)
 
-async def grantMoneyAll(dm=False):
+async def grantMoneyAll(pts, dm=False):
     global users
     for user in users:
-        user.addPoints(10)
+        user.addPoints(pts)
         if (dm):
-            await dmUser(user.id, "You have been given 10 chesta points", False)
+            pass
+            #await dmUser(user.id, "You have been given 10 chesta points", False)
 
     saveUserData()
 

@@ -87,7 +87,7 @@ async def dev(ctx, args:str):
         await users.grantMoneyAll(money)
 
         await ctx.respond("done", ephemeral=True)
-        if (len(args) <= 2):
+        if (len(args) == 2):
             return
         
         if (args[2] == "-a"):
