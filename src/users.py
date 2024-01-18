@@ -65,6 +65,15 @@ def loadUserData():
     users = tmp
     logf(f"loaded {num} users")
 
+async def grantMoneyAll(dm=False):
+    global users
+    for user in users:
+        user.addPoints(10)
+        if (dm):
+            await dmUser(user.id, "You have been given 10 chesta points", False)
+
+    saveUserData()
+
 def saveUserData():
     logf("saving user data")
     with open('users.json', 'w') as f:

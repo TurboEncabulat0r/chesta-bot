@@ -14,6 +14,8 @@ inactiveRole = 0
 atEveryoneChannel = 0
 offlineTimeout = 10
 
+adminId = 422488203446976513
+
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
 builtins.debug = True
@@ -73,6 +75,25 @@ async def watchForUserUpdate():
             logf("applied inactive role to " + u.name)
         lastStatus = member.status
         await asyncio.sleep(offlineTimeout)
+
+@client.slash_command(guild_ids=[guild])
+async def dev(ctx, args:str):
+    if (ctx.author.id != adminId):
+        return
+    
+    args = args.split(" ")
+    if (args[0] == "handouts"):
+        money = int(args[1])
+        await users.grantMoneyAll(money)
+
+        await ctx.respond("done", ephemeral=True)
+        if (len(args) <= 2):
+            return
+        
+        if (args[2] == "-a"):
+            channel = client.get_channel(atEveryoneChannel)
+            await channel.send(f"CHESTA STONE STIMULUS, EVERYONE GETS {money} CP @everyone ")
+        
 
 
 @client.slash_command(guild=client.get_guild(guild))
