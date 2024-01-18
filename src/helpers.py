@@ -48,25 +48,4 @@ async def dmUser(id, message, embed=False):
     else:
         await user.send(message)
 
-        
-def saveAteveryoneTime():
-    logf("saving data")
-    with open('data.json', 'w') as f:
-        j = {
-            "lastSend": lastSend,
-            "nextSend": nextSend
-        }
-        json.dump(j, f, indent=4)
-        f.close()
 
-def loadLastSend():
-    global lastSend, nextSend
-    try:
-        with open('data.json') as f:
-            j = json.load(f)
-            lastSend = j['lastSend']
-            nextSend = j['nextSend']
-            logf("lastSend loaded: " + str(lastSend))
-            f.close()
-    except:
-        saveAteveryoneTime()

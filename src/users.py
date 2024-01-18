@@ -68,7 +68,8 @@ def loadUserData():
 async def grabAllUsers():
     # registers all the users in the guild
     global users
-    for user in guild.members:
+    g = client.get_guild(guild)
+    for user in g.members:
         if not userInList(user.id):
             registerUser(user.id)
 
