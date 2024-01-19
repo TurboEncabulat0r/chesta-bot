@@ -1,14 +1,23 @@
 import builtins
 import json
 import time
+import atexit
 
 client = builtins.client
+def saveLogs():
+    with open("log.txt", "a") as f:
+        for log in savedLogs:
+            f.write(log + "\n")
+        f.close()
 
+atexit.register(saveLogs)
 savedLogs = []
-firstLog = False
+firstLog = True
 def logf(str, args = None):
-    if (not firstLog):
-        with open("log.txt", "w") as f:
+    global firstLog
+    if (firstLog):
+        firstLog = False
+        with open("log.txt", "a") as f:
             f.write("---- New Log Session ----\n")
             f.close()
     msg = ""

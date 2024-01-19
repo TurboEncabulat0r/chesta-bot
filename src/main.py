@@ -5,7 +5,6 @@ import time
 import builtins
 import datetime
 
-
 # config vars
 token = ""
 userId = 0
@@ -14,14 +13,13 @@ inactiveRole = 0
 atEveryoneChannel = 0
 offlineTimeout = 10
 
-adminId = 422488203446976513
+adminId = [422488203446976513]
 
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
 builtins.debug = True
 
 from helpers import *
-
 
 lastSend = 0
 nextSend = 0
@@ -59,7 +57,7 @@ import users
 # import all modules here
 #import stocks
 import gambling
-
+import vcimpl
 
 async def watchForUserUpdate():
     # checks every 10 seconds if the user is offline, if so applies the inactive role
@@ -78,10 +76,11 @@ async def watchForUserUpdate():
 
 @client.slash_command(guild_ids=[guild])
 async def dev(ctx, args:str):
-    if (ctx.author.id != adminId):
+    if (ctx.author.id != adminId[0]):
         return
     
     args = args.split(" ")
+
     if (args[0] == "handouts"):
         money = int(args[1])
         await users.grantMoneyAll(money)
@@ -247,12 +246,11 @@ async def on_ready():
     users.loadUserData()
     asyncio.create_task(watchForUserUpdate())
     asyncio.create_task(ScheduleTimedAtEveryone())
+    asyncio.create_task(vcimpl.vcScanner())
 
 
 def atExit():
-
-    if (len(users) > 0):
-        users.saveUserData()
+    users.saveUserData()
     
     if nextSend != 0:
         saveAteveryoneTime()

@@ -19,7 +19,24 @@ class User():
 
         self.points = 0
         self.hasAtEveryoed = False
-        
+        self.rawJson = None
+        self.data = {}
+    
+    def addArbitraryData(self, key, value):
+        # if it already exists, update it
+        if key in self.data:
+            self.data[key] = value
+            return
+        d = {key : value}
+        print("adding")
+        self.data.update(d)
+        print(self.data)
+
+    def setArbitrayData(self, key, value):
+        self.addArbitraryData(key, value)
+
+    def getArbitraryData(self, key):
+        return self.data[key]
 
     def addPoints(self, points):
         self.points += points
@@ -31,12 +48,19 @@ class User():
         self.points = json['points']
         self.id = json['id']
         self.name = client.get_user(self.id).name
+        try:
+            self.data = json['data']
+        except:
+            pass
+        self.rawJson = json
 
     def tojson(self):
+        
         return {
             "name": self.name,
             "id": self.id,
-            "points": self.points
+            "points": self.points,
+            "data": self.data
         }
 
 def loadUserData():
@@ -85,6 +109,9 @@ async def grantMoneyAll(pts, dm=False):
 
 def saveUserData():
     logf("saving user data")
+    if (len(users) == 0):
+        return
+    
     with open('users.json', 'w') as f:
         data = []
         for user in users:
@@ -112,7 +139,7 @@ def registerUser(id):
         users.append(u)
         saveUserData()
         return u
-
+    
 def grantPoints(id, points):
     if userInList(id):
         getUser(id).addPoints(points)

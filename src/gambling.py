@@ -45,6 +45,7 @@ class Roulette():
                 "color": "red",
                 "even": True
             }
+        
         else:
             return {
                 "color": "black",

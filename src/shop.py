@@ -1,4 +1,11 @@
-import json
+import discord, asyncio
+from discord.ext import commands
+import random, json, os, builtins
+from helpers import * 
+
+guild = builtins.guild
+client = builtins.client
+
 
 class Shop():
     def __init__(self):
@@ -40,11 +47,13 @@ class Item():
         self.price = price
         self.description = description
         self.emoji = emoji
+        self.owner = None
 
     def tojson(self):
         return {
             "name": self.name,
             "price": self.price,
             "description": self.description,
-            "emoji": self.emoji
+            "emoji": self.emoji,
+            "owner": self.owner
         }
