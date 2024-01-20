@@ -22,7 +22,7 @@ commands:
 async def vc(ctx, user: discord.Member = None):
     if user == None:
         user = ctx.author
-    u = users.getUser(user)
+    u = users.getUser(user.id)
     t = 0
     try:
         t = u.getArbitraryData("vcTime")
