@@ -21,7 +21,7 @@ class Roulette():
     def __init__(self, user):
         self.bets = []
         self.id = user
-        self.specialSpaces = ["0", "red", "black", "even", "odd"]
+        self.specialSpaces = ["0", "red", "black", "even", "odd", "1st12", "2nd12", "3rd12"]
         self.spaces = [str(i) for i in range(1, 37)]
 
     def addBet(self, space, bet):
@@ -35,21 +35,27 @@ class Roulette():
     
     def getSpaceInfo(self, space):
         #uses the space string to get the color and if it is even or odd
+
+        twelve = (int(space) // 12) + 1
+
         if space == "00" or space == "0":
             return {
                 "color": "green",
-                "even": False
+                "even": False,
+                "twelve": None
             }
         elif int(space) % 2 == 0:
             return {
                 "color": "red",
-                "even": True
+                "even": True,
+                "twelve": twelve
             }
         
         else:
             return {
                 "color": "black",
-                "even": False
+                "even": False,
+                "twelve": twelve
             }
 
     def getRandomSpace(self):
@@ -84,6 +90,13 @@ class Roulette():
                 m = bet["bet"] * 2
             elif bet["space"] == "odd" and not info["even"]:
                 m = bet["bet"] * 2
+            elif bet["space"] == "1st12" and info["twelve"] == 1:
+                m = bet["bet"] * 3
+            elif bet["space"] == "2nd12" and info["twelve"] == 2:
+                m = bet["bet"] * 3
+            elif bet["space"] == "3rd12" and info["twelve"] == 3:
+                m = bet["bet"] * 3
+
             money += m
 
         # adds fields for all the spaces and points the user betted on, they should all be on multiple lines
@@ -117,7 +130,7 @@ async def roulette(ctx):
     games.append([id, r])
     embed = discord.Embed(title="Roulette", description=f"You started a roulette game", color=0x00ff00)
     embed.add_field(name="How to play", value="Use `/roulette_bet` to bet on a space on the roulette wheel, then use `/roulette` again to spin")
-    embed.add_field(name="Spaces/Rewards", value="`0 - 36` (x36), `red`, `black`, `even`, `odd` (x2)")
+    embed.add_field(name="Spaces/Rewards", value="`0 - 36` (x36), N-st12 (x3), `red`, `black`, `even`, `odd` (x2)")
     
     # attach image
     img = discord.File(rouletteImagePath, filename="roulette.png")

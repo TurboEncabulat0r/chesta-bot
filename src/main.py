@@ -188,7 +188,7 @@ async def handouts(ctx, ammount:int, message:str = None):
         return
     
     channel = client.get_channel(atEveryoneChannel)
-    await channel.send(message)
+    await channel.send(message + f"({ammount} cp)")
 
     
 
