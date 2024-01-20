@@ -118,7 +118,7 @@ class Roulette():
 # chesta points
         
 games = []
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def roulette(ctx):
     id = ctx.author.id
     for game in games:
@@ -157,7 +157,7 @@ async def roulette_spin(ctx):
         embed = discord.Embed(title="Roulette", description=f"You don't have a roulette game", color=0x00ff00)
         await ctx.respond(embed=embed, ephemeral=True)
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def roulette_refund(ctx):
     for game in games:
         if game[0] == ctx.author.id:
@@ -169,7 +169,7 @@ async def roulette_refund(ctx):
         embed = discord.Embed(title="Roulette", description=f"You don't have a roulette game", color=0x00ff00)
         await ctx.respond(embed=embed, ephemeral=True)
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def roulette_bet(ctx, space:str , bet: int):
     user = users.getUser(ctx.author.id)
     if (user == None):
@@ -207,7 +207,7 @@ async def slots(ctx, bet: int):
     await ctx.respond("This command is not yet implemented.", ephemeral=True)
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def coinflip(ctx, ammount:int):
     if users.userInList(ctx.author.id):
         if users.getUser(ctx.author.id).points >= ammount:
