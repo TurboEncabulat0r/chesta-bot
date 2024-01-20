@@ -13,7 +13,7 @@ inactiveRole = 0
 atEveryoneChannel = 0
 offlineTimeout = 10
 
-adminId = [422488203446976513]
+adminId = [422488203446976513, 301069013063172108]
 
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
@@ -76,10 +76,11 @@ async def watchForUserUpdate():
 
 @client.slash_command(guild_ids=[guild])
 async def dev(ctx, args:str):
-    if (ctx.author.id != adminId[0]):
+    if (ctx.author.id not in adminId):
         return
     
     args = args.split(" ")
+    logf(f"dev command from {ctx.author.name}: {args}")
 
     if (args[0] == "handouts"):
         money = int(args[1])
@@ -96,6 +97,33 @@ async def dev(ctx, args:str):
     if(args[0] == "grabUsers"):
         await users.grabAllUsers()
         await ctx.respond("done", ephemeral=True)
+
+    if(args[0] == "grantPoints"):
+        points = int(args[1])
+        await users.grantPointsAll(points)
+        await ctx.respond(f"gave {points} to user", ephemeral=True)
+
+    if(args[0] == "setPoints"):
+        points = int(args[1])
+        await users.setPointsAll(points)
+        await ctx.respond("set points", ephemeral=True)
+
+    # get user arbitrary data
+    if(args[0] == "getUserArbData"):
+        # getUserArbData <userId> <key>
+        user = client.get_user(int(args[1]))
+        u = users.getUser(user.id)
+        try:
+            await ctx.respond(u.getArbitraryData(args[2]), ephemeral=True)
+        except:
+            await ctx.respond("failure", ephemeral=True)
+
+    # set user arbitrary data
+    if(args[0] == "setUserArbData"):
+        user = client.get_user(int(args[1]))
+        u = users.getUser(user.id)
+        u.addArbitraryData(args[2], args[3])
+        await ctx.respond(f"set {args[2]} to {args[3]}", ephemeral=True)
         
 
 

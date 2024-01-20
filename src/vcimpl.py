@@ -3,6 +3,7 @@ from discord.ext import commands
 import random, json, os, builtins
 from helpers import * 
 import users
+import atexit
 guild = builtins.guild
 client = builtins.client
 
@@ -95,6 +96,21 @@ async def handleMemberLeave(member, vc):
         await calculateAwards(user, timeInVC)
         # remove them from vcData
         vcData.remove(data)
+
+def atExit():
+    # sets the data for all users and then calls saveUsers
+    for d in vcData:
+        user = users.getUser(d['id'])
+        timeInVC = time.time() - d['startTime']
+        d = 0
+        try:
+            d = user.getArbitraryData("vcTime")
+        except:
+            user.addArbitraryData("vcTime", 0) 
+        user.setArbitrayData("vcTime", round(d + timeInVC, 2))
+    users.saveUsers()
+
+atexit.register(atExit)
 
 savedMembers = []
 async def vcScanner():
