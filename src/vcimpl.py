@@ -98,29 +98,34 @@ async def handleMemberLeave(member, vc):
 
 savedMembers = []
 async def vcScanner():
-    vcs = []  
-    # gets all the voice channels in the server
-    g = client.get_guild(guild)
-    for channel in g.voice_channels:
-        vcs.append(channel)
+    while True:
+        vcs = []  
+        # gets all the voice channels in the server
+        g = client.get_guild(guild)
+        for channel in g.voice_channels:
+            vcs.append(channel)
 
-    # loop through all the voice channels
-    for vc in vcs:
-        # loop through all the members in the voice channel
-        for member in vc.members:
-            # if they are not in savedMembers, add them and call handleMemberJoin
-            if member.id not in savedMembers:
-                savedMembers.append(member.id)
-                await handleMemberJoin(member, vc)
-            # if they are in savedMembers, do nothing
-            else:
-                pass
-        # loop through all the members in savedMembers
-        for member in savedMembers:
-            # if they are not in the voice channel, remove them from savedMembers and call handleMemberLeave
-            if member not in [m.id for m in vc.members]:
-                await handleMemberLeave(member, vc)
-                savedMembers.remove(member)
+        # loop through all the voice channels
+        for vc in vcs:
+            # loop through all the members in the voice channel
+            for member in vc.members:
+                # if they are not in savedMembers, add them and call handleMemberJoin
+                if member.id not in savedMembers:
+                    data = {"id": member.id, "vcid": vc.id}
+                    savedMembers.append(data)
+                    await handleMemberJoin(member, vc)
+                # if they are in savedMembers, do nothing
+                else:
+                    pass
+            # loop through all the members in savedMembers
+            for member in savedMembers:
+                # if this is not thier origin channel, do nothing
+                if member['vcid'] != vc.id:
+                    pass
 
-    await asyncio.sleep(15)
-    await vcScanner()
+                # if they are not in the voice channel, remove them from savedMembers and call handleMemberLeave
+                if member not in [m.id for m in vc.members]:
+                    savedMembers.remove(member)
+                    await handleMemberLeave(member['id'], vc)
+
+        await asyncio.sleep(15)
