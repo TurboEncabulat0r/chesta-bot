@@ -94,22 +94,22 @@ async def dev(ctx, args:str):
             channel = client.get_channel(atEveryoneChannel)
             await channel.send(f"CHESTA STONE STIMULUS, EVERYONE GETS {money} CP @everyone ")
 
-    if(args[0] == "grabUsers"):
+    elif(args[0] == "grabUsers"):
         await users.grabAllUsers()
         await ctx.respond("done", ephemeral=True)
 
-    if(args[0] == "grantPoints"):
+    elif(args[0] == "grantPoints"):
         points = int(args[1])
         await users.grantPointsAll(points)
         await ctx.respond(f"gave {points} to user", ephemeral=True)
 
-    if(args[0] == "setPoints"):
+    elif(args[0] == "setPoints"):
         points = int(args[1])
         await users.setPointsAll(points)
         await ctx.respond("set points", ephemeral=True)
 
     # get user arbitrary data
-    if(args[0] == "getUserArbData"):
+    elif(args[0] == "getUserArbData"):
         # getUserArbData <userId> <key>
         user = client.get_user(int(args[1]))
         u = users.getUser(user.id)
@@ -119,11 +119,15 @@ async def dev(ctx, args:str):
             await ctx.respond("failure", ephemeral=True)
 
     # set user arbitrary data
-    if(args[0] == "setUserArbData"):
+    elif(args[0] == "setUserArbData"):
         user = client.get_user(int(args[1]))
         u = users.getUser(user.id)
         u.addArbitraryData(args[2], args[3])
         await ctx.respond(f"set {args[2]} to {args[3]}", ephemeral=True)
+
+    else:
+        await ctx.respond("invalid command", ephemeral=True)
+
         
 
 
