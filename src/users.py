@@ -35,7 +35,9 @@ class User():
     def setArbitrayData(self, key, value):
         self.addArbitraryData(key, value)
 
-    def getArbitraryData(self, key):
+    def getArbitraryData(self, key= None):
+        if (key == None):
+            return self.data
         return self.data[key]
 
     def addPoints(self, points):

@@ -98,21 +98,56 @@ async def dev(ctx, args:str):
         await users.grabAllUsers()
         await ctx.respond("done", ephemeral=True)
 
-    elif(args[0] == "grantPoints"):
+    elif(args[0] == "grantPointsA"):
         points = int(args[1])
         await users.grantPointsAll(points)
         await ctx.respond(f"gave {points} to user", ephemeral=True)
 
-    elif(args[0] == "setPoints"):
+    elif(args[0] == "setPointsA"):
         points = int(args[1])
         await users.setPointsAll(points)
         await ctx.respond("set points", ephemeral=True)
 
-    # get user arbitrary data
-    elif(args[0] == "getUserArbData"):
-        # getUserArbData <userId> <key>
+    elif(args[0] == "grantPoints"):
         user = client.get_user(int(args[1]))
         u = users.getUser(user.id)
+        u.addPoints(int(args[2]))
+        await ctx.respond(f"gave {args[2]} to user", ephemeral=True)
+
+    elif(args[0] == "setPoints"):
+        user = client.get_user(int(args[1]))
+        u = users.getUser(user.id)
+        u.setPoints(int(args[2]))
+        await ctx.respond("set points", ephemeral=True)
+
+    elif (args[0] == "fastforward"):
+        h = int(args[1])
+        m = int(args[2])
+        s = int(args[3])
+        fastForward(h, m, s)
+
+        timeRemaining = nextSend - time.time()
+        embed = discord.Embed(title="Next @everyone", description="The next @everyone will be sent at:", color=0x00ff00)
+        embed.add_field(name="Time", value=f"`{formatTime(timeRemaining)}`", inline=True)
+        embed.add_field(name="Time of day", value=f"`{datetime.datetime.fromtimestamp(nextSend).strftime('%I:%M %p')}`", inline=True)
+        await ctx.respond(embed=embed, ephemeral=True)
+
+
+
+    # get user arbitrary data
+    elif(args[0] == "getUserArbData"):
+        if (len(args) < 2):
+            await ctx.respond("syntax is getUserArbData <userId> ?<key>", ephemeral=True)
+            return
+        
+        user = client.get_user(int(args[1]))
+        u = users.getUser(user.id)
+
+        if (len(args) == 2):
+            await ctx.respond(u.getArbitraryData(), ephemeral=True)
+            return
+
+
         try:
             await ctx.respond(u.getArbitraryData(args[2]), ephemeral=True)
         except:
@@ -124,7 +159,19 @@ async def dev(ctx, args:str):
         u = users.getUser(user.id)
         u.addArbitraryData(args[2], args[3])
         await ctx.respond(f"set {args[2]} to {args[3]}", ephemeral=True)
-
+    elif(args[0] == "help"):
+        embed = discord.Embed(title="Dev Commands", description="The dev commands are:", color=0x00ff00)
+        embed.add_field(name="handouts", value="`handouts <ammount> <announce>` - give everyone money", inline=False)
+        embed.add_field(name="grabUsers", value="`grabUsers` - loads all users into the bot (DONT USE)", inline=False)
+        embed.add_field(name="grantPointsA", value="`grantPointsA <ammount>` - give everyone points", inline=False)
+        embed.add_field(name="setPointsA", value="`setPointsA <ammount>` - set everyones points", inline=False)
+        embed.add_field(name="grantPoints", value="`grantPoints <userId> <ammount>` - give a user points", inline=False)
+        embed.add_field(name="setPoints", value="`setPoints <userId> <ammount>` - set a users points", inline=False)
+        embed.add_field(name="fastforward", value="`fastforward <hours> <minuites> <seconds>` - fast forwards time", inline=False)
+        embed.add_field(name="getUserArbData", value="`getUserArbData <userId> ?<key>` - get a users arbitrary data", inline=False)
+        embed.add_field(name="setUserArbData", value="`setUserArbData <userId> <key> <value>` - set a users arbitrary data", inline=False)
+        embed.add_field(name="help", value="`help` - shows this message", inline=False)
+        await ctx.respond(embed=embed, ephemeral=True)
     else:
         await ctx.respond("invalid command", ephemeral=True)
 
@@ -191,20 +238,23 @@ async def ScheduleTimedAtEveryone():
             logf("sent @everyone")
         await asyncio.sleep(5)
 
+def fastForward(h, m, s):
+    global lastSend, nextSend, usersLeft
+    lastSend = time.time()
+    nextSend -= h * 3600
+    nextSend -= m * 60
+    nextSend -= s
+    saveAteveryoneTime()
+    usersLeft = 5
+    users.resetAtEveryone()
+
 
 usersLeft = 5
 if (builtins.debug):
     @client.slash_command(guild_ids=[guild])
     async def fastforward(ctx, h:int, m:int, s:int):
-        global lastSend, nextSend, usersLeft
-        lastSend = time.time()
-        nextSend -= h * 3600
-        nextSend -= m * 60
-        nextSend -= s
-        saveAteveryoneTime()
-        usersLeft = 5
-        users.resetAtEveryone()
-        await ctx.respond("fast forwarded", ephemeral=True)
+        fastForward(h, m, s)
+        await ctx.respond("done", ephemeral=True)
     
 
 @client.event
