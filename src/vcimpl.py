@@ -117,15 +117,11 @@ async def vcScanner():
                 # if they are in savedMembers, do nothing
                 else:
                     pass
-            # loop through all the members in savedMembers
+            # loop through all the members in savedMembers, if it is thier origin vcid and they are not in the vc, call handleMemberLeave
             for member in savedMembers:
-                # if this is not thier origin channel, do nothing
-                if member['vcid'] != vc.id:
-                    pass
-
-                # if they are not in the voice channel, remove them from savedMembers and call handleMemberLeave
-                if member not in [m.id for m in vc.members]:
-                    savedMembers.remove(member)
-                    await handleMemberLeave(member['id'], vc)
+                if member['vcid'] == vc.id:
+                    if member['id'] not in [m.id for m in vc.members]:
+                        await handleMemberLeave(member['id'], vc)
+                        savedMembers.remove(member)
 
         await asyncio.sleep(15)
