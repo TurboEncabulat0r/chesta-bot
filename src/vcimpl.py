@@ -56,7 +56,7 @@ async def calculateAwards(user, time):
     user.addPoints(points)
     logf(f"awarded {points} points to {user.name} for {formatTime(time)} in vc")
     if (points > 30):
-        await dmUser(user, f"You have been awarded {points} points for spending {formatTime(time)} in vc")
+        await dmUser(client.get_user(user.id), f"You have been awarded {points} points for spending {formatTime(time)} in vc")
 
 async def handleMemberJoin(member, vc):
     # check if they are in vcData
