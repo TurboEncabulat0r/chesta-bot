@@ -13,7 +13,7 @@ inactiveRole = 0
 atEveryoneChannel = 0
 offlineTimeout = 10
 
-adminId = [422488203446976513, 301069013063172108]
+adminId = [422488203446976513, 301069013063172108, 409909528839192576]
 
 client = commands.Bot(command_prefix = "!", case_insensitive = True, intents=discord.Intents.all())
 builtins.client = client
@@ -175,7 +175,22 @@ async def dev(ctx, args:str):
     else:
         await ctx.respond("invalid command", ephemeral=True)
 
-        
+
+@client.slash_command(guild_ids=[guild])
+async def handouts(ctx, ammount:int, message:str = None):
+    if (ctx.author.id not in adminId):
+        return
+
+    await users.grantMoneyAll(ammount)
+
+    await ctx.respond("done", ephemeral=True)
+    if (message == None):
+        return
+    
+    channel = client.get_channel(atEveryoneChannel)
+    await channel.send(message)
+
+    
 
 
 @client.slash_command(guild=client.get_guild(guild))
