@@ -221,13 +221,15 @@ async def getnext(ctx):
 
 
 def getWaitTime():
-    # gets the seconds till midnight tonight
-    # then takes a random number between 10 and 20
-    # then multiplies that by the number of seconds in a day
-    # the goal is to have the time @everyone is sent to be a random time between 10am and 12pm
-    timeTillMidnight = (datetime.datetime.combine(datetime.date.today(), datetime.time.max) - datetime.datetime.now()).total_seconds()
-    hours = random.uniform(10, 22)
-    return (hours * 3600) + timeTillMidnight
+    # gets how many seconds we need to wait untill 12pm the next day cst
+    t = time.time()
+    t = datetime.datetime.fromtimestamp(t)
+    t = t.replace(hour=12, minute=0, second=0, microsecond=0)
+    t = t.timestamp()
+    if (t < time.time()):
+        t += 86400
+    return t - time.time()
+
 
 if (builtins.debug):
     @client.slash_command(guild_ids=[guild])
