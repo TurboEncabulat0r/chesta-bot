@@ -24,6 +24,36 @@ from helpers import *
 lastSend = 0
 nextSend = 0
 
+def saveAteveryoneTime():
+    try:
+        with open('data.json', 'r') as f:
+            data = json.load(f)
+            data['lastSend'] = lastSend
+            data['nextSend'] = nextSend
+    except:
+        data = {
+            "lastSend": lastSend,
+            "nextSend": nextSend
+        }
+    with open('data.json', 'w') as f:
+        json.dump(data, f, indent=4)
+    
+    
+
+def loadLastSend():
+    global lastSend, nextSend
+    try:
+        with open('data.json', 'r') as f:
+            data = json.load(f)
+            lastSend = data['lastSend']
+            nextSend = data['nextSend']
+    except:
+        lastSend = 0
+        nextSend = 0
+        saveAteveryoneTime()
+
+
+
 try:
     # Load config
     with open('config.json') as f:
@@ -273,29 +303,33 @@ if (builtins.debug):
     async def fastforward(ctx, h:int, m:int, s:int):
         fastForward(h, m, s)
         await ctx.respond("done", ephemeral=True)
-    
+
+def getUserAtEveryoneTolerance(user : users.User):
+    return 1800 + (user.dailyTime * 60)
 
 @client.event
 async def on_message(message):
     global usersLeft, lastSend, nextSend
     if message.author == client.user:
         return
-        
+    user = users.getUser(message.author.id)
+
     n = random.randint(0, 100)
-    if n < 5:
-        users.grantPoints(message.author.id, 5)
-        embed = discord.Embed(title="Points", description=f"+5 chesta points for `{message.author.name}`", color=0x00ff00)
+    if n < 5 + user.onMessageChance:
+        pts = 5 + user.onMsgPtsBonus
+        users.grantPoints(message.author.id, pts)
+        embed = discord.Embed(title="Points", description=f"+{pts} chesta points for `{message.author.name}`", color=0x00ff00)
         await message.channel.send(embed=embed)
         
         
     elif n == 34:
         n = random.randint(0, 100)
-        if n == 34:
+        if n < 75:
             embed = discord.Embed(title="THE RICHEST  IN THE WORLD", description=f"+500 chesta points for `{message.author.name}` @everyone", color=0x00ff00)
             await message.channel.send(embed=embed)
             users.grantPoints(message.author.id, 500)
 
-    if (time.time() - lastSend >= 1800):
+    if (time.time() - lastSend >= getUserAtEveryoneTolerance(user)):
         usersLeft = 5
     
     # if the message contains @everyone
@@ -304,9 +338,11 @@ async def on_message(message):
         if (users.getUser(message.author.id).hasAtEveryoed == False):
             users.getUser(message.author.id).hasAtEveryoed = True
             #if its been 30 minuites since the last @everyone
-            if (time.time() - lastSend >= 1800):
+            if (time.time() - lastSend >= getUserAtEveryoneTolerance(user)):
                 usersLeft = 5
                 return
+            
+            
             
             if (usersLeft <= 0):
                 return
@@ -322,6 +358,8 @@ async def on_message(message):
                 points = 25
             elif (usersLeft == 1):
                 points = 10
+
+            points += user.dailyBonus
             usersLeft -= 1
             embed = discord.Embed(title="Points", description=f"+{points} chesta points for `{message.author.name}`", color=0x00ff00)
 
@@ -331,6 +369,32 @@ async def on_message(message):
     await client.process_application_commands(message)
     await client.process_commands(message)
 
+@client.slash_command(guild_ids=[guild])
+async def getuserstats(ctx):
+    user = users.getUser(ctx.author.id)
+    embed = discord.Embed(title="Stats", description=f"Your stats are:", color=0x00ff00)
+    embed.add_field(name="Points", value=f"`{user.points}`", inline=True)
+    embed.add_field(name="@everyone pt bonus", value=f"`{user.dailyBonus}`", inline=True)
+    embed.add_field(name="@everyone bonus time", value=f"`{user.dailyTime * 60}`", inline=True)
+    embed.add_field(name="On Message Chance", value=f"`{user.onMessageChance + 5}%`", inline=True)
+    embed.add_field(name="On Message Points", value=f"`{user.onMsgPtsBonus + 5}`", inline=True)
+    embed.add_field(name="VC Hourly Rate", value=f"`{user.vcRewardsBonus + 30}`", inline=True)
+    embed.add_field(name="VC Time", value=f"`{formatTime(user.getArbitraryData('vcTime'))}`", inline=True)
+    try:
+        pointsPDay = user.data['pointsPDay']
+        embed.add_field(name="CP / day", value=f"`{pointsPDay}`", inline=True)
+    except:
+        pass
+    await ctx.respond(embed=embed, ephemeral=True)
+
+@client.slash_command(guild_ids=[guild])
+async def reload(ctx):
+    if (ctx.author.id not in adminId):
+        return
+    return
+    users.loadUserData()
+    shop.reloadFromFiles()
+    await ctx.respond("reloaded users, shop items", ephemeral=True)
 
 @client.event
 async def on_ready():
@@ -356,28 +420,7 @@ def atExit():
     if nextSend != 0:
         saveAteveryoneTime()
         
-def saveAteveryoneTime():
-    logf("saving data")
-    with open('data.json', 'w') as f:
-        j = {
-            "lastSend": lastSend,
-            "nextSend": nextSend
-        }
-        json.dump(j, f, indent=4)
-        f.close()
 
-
-def loadLastSend():
-    global lastSend, nextSend
-    try:
-        with open('data.json') as f:
-            j = json.load(f)
-            lastSend = j['lastSend']
-            nextSend = j['nextSend']
-            logf("lastSend loaded: " + str(lastSend))
-            f.close()
-    except:
-        saveAteveryoneTime()
 
 if __name__ == "__main__":
     loadLastSend()

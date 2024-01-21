@@ -42,9 +42,13 @@ class User():
             return self.data
         return self.data[key]
     
-    def send(self, message):
+    def removeArbitraryData(self, key):
+        if key in self.data:
+            self.data.pop(key)
+    
+    async def send(self, message):
         try:
-            client.get_user(self.id).send(message)
+            await client.get_user(self.id).send(message)
         except:
             pass
 

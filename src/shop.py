@@ -3,6 +3,7 @@ from discord.ext import commands
 import random, json, os, builtins
 from helpers import * 
 import users
+import atexit
 guild = builtins.guild
 client = builtins.client
 
@@ -35,8 +36,16 @@ increaseVcRewards
     - data {"bonus": n}
 increaseDailyTime
     - data {"time": n}
-"""
+randQuoteandPts
+    - data {"pts": n}
 
+"""
+randomChestaQuotes = ["GOD MOTHAFUCKIN DAMN", "mista grizzely, WHEN IS THE NEXT BUS BITCH?", "I WANNA BUY THIS GODDAMN RACIN CAR MY N", 
+                      "i got this ancient ass clock right here, now this mothafuckin clock is nice",
+                      "WHAT HAPPENED TO MY MOTHAFUCKIN CLOCK BITCH, OHHHH IT BROKE",
+                      "4 QUARTERS? im the richest   in the world",
+                      "mothafuckin NEWPORTS??",
+                      "one mothafuckin day i started chesting my stone all over the place"]
 
 # data may contain anything or nothing, example uses are if we have an item that generates pts every day
 # we can have a data field that stores the number of pts it generates
@@ -158,16 +167,22 @@ async def addPtsPerDay(user : users.User, pts):
     else:
         user.data["ptsPerDay"] = pts
 
+# saves the last time it awarded pts, it will then wait another 24 hours before awarding again
+# this is to prevent it from awarding pts multiple times if the bot is restarted
+lastPayDay = 0
 async def ptsPerDayTask():
+    global lastPayDay
     while True:
-        total = 0
-        for user in users.users:
-            if "ptsPerDay" in user.data:
-                user.addPoints(user.data["ptsPerDay"])
-                total += user.data["ptsPerDay"]
-
-        logf(f"added {total} pts to users for daily bonus")
-        await asyncio.sleep(60 * 60 * 24)
+        if time.time() - lastPayDay > 86400:
+            lastPayDay = time.time()
+            for user in users.users:
+                if "dmUserRandom" in user.data:
+                    await dmUser(user.id, random.choice(randomChestaQuotes), False)
+                if "ptsPerDay" in user.data:
+                    user.addPoints(user.data["ptsPerDay"])
+                    user.data["ptsPerDay"] = 0
+            logf("awarded pts per day")
+        await asyncio.sleep(60)
 
 def getUserInventory(user):
     inv = None
@@ -218,20 +233,19 @@ def getUserBonusus(user : users.User):
     # loops through all items in the users inventory and adds thier bonuses to the dict
     for item in inv:
         try:
-            if item["action"]["name"] == "increaseOnMessageChance":
-                bonuses["onMessageChance"] += item["action"]["data"]["chance"]
-            elif item["action"]["name"] == "increaseOnMessagePts":
-                bonuses["onMessagePts"] += item["action"]["data"]["pts"]
-            elif item["action"]["name"] == "increaseDailyBonus":
-                bonuses["dailyBonus"] += item["action"]["data"]["bonus"]
-            elif item["action"]["name"] == "increaseVcRewards":
-                bonuses["vcRewards"] += item["action"]["data"]["bonus"]
-            elif item["action"]["name"] == "increaseDailyTime":
-                bonuses["dailyTime"] += item["action"]["data"]["time"]
+            if item["action"]["name"] == "onMessageChance":
+                bonuses["onMessageChance"] += item["action"]["data"]["chance"] * item["qty"]
+            elif item["action"]["name"] == "onMessagePts":
+                bonuses["onMessagePts"] += item["action"]["data"]["pts"] * item["qty"]
+            elif item["action"]["name"] == "dailyBonus":
+                bonuses["dailyBonus"] += item["action"]["data"]["bonus"] * item["qty"]
+            elif item["action"]["name"] == "vcRewards":
+                bonuses["vcRewards"] += item["action"]["data"]["bonus"] * item["qty"]
+            elif item["action"]["name"] == "dailyTime":
+                bonuses["dailyTime"] += item["action"]["data"]["time"] * item["qty"]
         except:
             pass
     
-
 
     return bonuses
 
@@ -250,16 +264,48 @@ def addPtsPerDay(user : users.User, pts):
 
 
 @client.slash_command(guild_ids=[guild])
-async def shop(ctx, item_name:str=None):
+async def shop(ctx, item_name:str=None, page:int=1):
+    pages = len(items) // 20 + 1
+    embed = discord.Embed(title=f"Shop ({page}/{pages})", description="The shop has the following items:", color=0x00ff00)
+    
+    embed.set_footer(text=f"[chesta shop v1.0]  |  /shop <item> for more info  |  /shop <page> to navigate")
+
+    # clever wacky list comphehension magic to get the items on the page
+    itemsOnPage = []
+    for i in range(20):
+        try:
+            itemsOnPage.append(items[i + (page - 1) * 20])
+        except:
+            break
+
+    owners = {}
+
     if item_name == None:
-        embed = discord.Embed(title="Shop", description="The shop has the following items:", color=0x00ff00)
-        for item in items:
-            embed.add_field(name=item.name, value=f"**${item.price}**", inline=False)
+
+        # loops through all items, and adds the owner to the list as a dict key thats value is a list of thier items
+        for i in itemsOnPage:
+            for owner in owners:
+                if i.owner == owner:
+                    owners[owner].append(i)
+                    break
+            else:
+                owners[i.owner] = [i]
+
+        # loops through all the owners and adds them to the embed
+        for owner in owners:
+            name = "**--chesta--**" if owner == 0 else client.get_user(owner).name
+            value = ""
+            for item in owners[owner]:
+                value += f"{item}\n"
+            embed.add_field(name=name, value=value, inline=False)
+
+            
+
         await ctx.respond(embed=embed, ephemeral=True)
     else:
         item = getItem(item_name)
         if item == None:
-            await ctx.respond("Item not found", ephemeral=True)
+            await ctx.respond(f"Item {item_name} not found", ephemeral=True)
         else:
             await ctx.respond(embed=item.toEmbed(), ephemeral=True)
 
@@ -273,15 +319,33 @@ def buyItem(user, item, qty):
     try:
         if item.action["name"] == "generatePtsPerDay":
             addPtsPerDay(user, item.action["data"]["pts"] * qty)
+        if item.action["name"] == "randQuoteandPts":
+            addPtsPerDay(user, item.action["data"]["pts"] * qty)
+            user.addArbitraryData("dmUserRandom", True)
+            
     except:
         pass
     user.setBonusValues(getUserBonusus(user))
     item.payOwner()
 
+def reloadFromFiles():
+    saveItems()
+    loadItems()
+
 def sellItem(user, item, qty):
     user.addPoints(item.price * qty)
     for i in range(qty):
         removeItemFromInventory(user, item)
+
+    if item.action != None:
+        try:
+            if item.action["name"] == "generatePtsPerDay":
+                addPtsPerDay(user, -item.action["data"]["pts"] * qty)
+            if item.action["name"] == "randQuoteandPts":
+                addPtsPerDay(user, -item.action["data"]["pts"] * qty)
+                user.removeArbitraryData("dmUserRandom")
+        except:
+            pass
     user.setBonusValues(getUserBonusus(user))
     item.payOwner()
 
@@ -361,11 +425,96 @@ async def removeitem(ctx, name:str):
         items.remove(item)
         saveItems()
         await ctx.respond("item removed", ephemeral=True)
-    
+
+@client.slash_command(guild_ids=[guild])
+async def shophelp(ctx, args:str=None):
+    if args == None:
+        embed = discord.Embed(title="Shop", description="The shop has the following commands:", color=0x00ff00)
+        embed.add_field(name="shop", value="shows the shop")
+        embed.add_field(name="buy <item>", value="buys an item from the shop")
+        embed.add_field(name="sell <item>", value="sells an item to the shop")
+        embed.add_field(name="inventory", value="shows your inventory")
+        embed.add_field(name="additem <name> <desc> <price> <qty> <image>", value="adds an item to the shop")
+        embed.add_field(name="removeitem <name>", value="removes an item from the shop")
+        embed.set_footer(text="use /shophelp <command> for more info on a command, use it on a shopitem to see aliases")
+        await ctx.respond(embed=embed, ephemeral=True)
+    elif args == "shop":
+        embed = discord.Embed(title="Shop", description="Shows the shop", color=0x00ff00)
+        embed.add_field(name="Usage", value="/shop ?<item>")
+        embed.add_field(name="item", value="the item to show, if none given shows a list of all")
+        await ctx.respond(embed=embed, ephemeral=True)
+    elif args == "buy":
+        embed = discord.Embed(title="Buy", description="Buys an item from the shop", color=0x00ff00)
+        embed.add_field(name="Usage", value="/buy <item> ?<number>")
+        embed.add_field(name="item", value="the item to buy")
+        embed.add_field(name="number", value="the number of items to buy, defaults to 1")
+        await ctx.respond(embed=embed, ephemeral=True)
+    elif args == "sell":
+        embed = discord.Embed(title="Sell", description="Sells an item to the shop", color=0x00ff00)
+        embed.add_field(name="Usage", value="/sell <item> ?<number>")
+        embed.add_field(name="item", value="the item to sell")
+        embed.add_field(name="number", value="the number of items to sell, defaults to 1")
+        await ctx.respond(embed=embed, ephemeral=True)
+    elif args == "inventory":
+        embed = discord.Embed(title="Inventory", description="Shows your inventory", color=0x00ff00)
+        embed.add_field(name="Usage", value="/inventory")
+        await ctx.respond(embed=embed, ephemeral=True)
+    elif args == "additem":
+        embed = discord.Embed(title="Additem", description="Adds an item to the shop, if anyone buys the item. the user who listed it will be payed", color=0x00ff00)
+        embed.add_field(name="Usage", value="/additem <name> <desc> <price> <qty> <image>")
+        embed.add_field(name="name", value="the name of the item")
+        embed.add_field(name="desc", value="the description of the item")
+        embed.add_field(name="price", value="the price of the item")
+        embed.add_field(name="qty", value="the quantity of the item")
+        embed.add_field(name="image", value="the image link of the item")
+        await ctx.respond(embed=embed, ephemeral=True)
+    else:
+        item = getItem(args)
+        if item == None:
+            embed = discord.Embed(title="Shop", description=f"Item or command `{args}` not found", color=0x00ff00)
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            embed = discord.Embed(title=item.name, description=item.desc, color=0x00ff00)
+            embed.add_field(name="Price", value=item.price)
+            embed.add_field(name="Stock", value=item.qty)
+            embed.add_field(name="Image", value=item.imageLink)
+            v = ""
+            for a in item.alias:
+                v += f"`{a}`,"
+            embed.add_field(name="Aliases", value=v)
+            await ctx.respond(embed=embed, ephemeral=True)
+
+
+def saveLastPayDay():
+    global lastPayDay
+    # opens data.json, and adds the lastPayDay to it
+    with open("data.json", "r") as f:
+        data = json.load(f)
+        try:
+            data["lastPayDay"] = lastPayDay
+        except:
+            data["lastPayDay"] = 0
+
+    with open("data.json", "w") as f:
+        json.dump(data, f, indent=4)
+
+def loadLastPayDay():
+    global lastPayDay
+    # opens data.json, and loads the lastPayDay from it
+    try:
+        with open("data.json", "r") as f:
+            data = json.load(f)
+            lastPayDay = data["lastPayDay"]
+    except:
+        saveLastPayDay()
+            
+
 async def initialize():
+    loadLastPayDay()
+    atexit.register(saveLastPayDay)
+    atexit.register(saveItems)
     initializeUsers()
     asyncio.create_task(ptsPerDayTask())
-
 
 loadItems()
 

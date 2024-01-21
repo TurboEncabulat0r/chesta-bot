@@ -1,0 +1,19 @@
+{
+    "name": "pack of newports",
+    "desc": "increases your earnings for vc time + 1",
+    "price": 100,
+    "qty": -1,
+    "imageLink": "https://discord.com/channels/1153867712750157835/1153867713219924052/1198699499791581265",
+    "action": {
+        "name": "vcRewards",
+        "data": {
+            "bonus": 1
+        }
+    },
+    "owner": 0,
+    "alias": [
+        "newports",
+        "np",
+        "ports"
+    ]
+}

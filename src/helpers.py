@@ -47,7 +47,7 @@ def formatTime(seconds, internal=False):
     seconds -= hours * 3600
     minutes = int(seconds // 60)
     seconds -= minutes * 60
-    return f"{hours} hours, {minutes} minutes, {seconds} seconds"
+    return f"{hours} hours, {minutes} minutes, {round(seconds)} seconds"
 
 
 async def dmUser(id, message, embed=False):
@@ -61,4 +61,11 @@ async def dmUser(id, message, embed=False):
         logf(f"failed to dm user {id} with message {message} with error {e}")
 
 
-
+async def getUserNameById(id):
+    if (id == 0):
+        return "chesta"
+    try:
+        
+        return client.get_user(id).name
+    except:
+        return "Unknown User"
