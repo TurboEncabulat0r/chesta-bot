@@ -1,13 +1,13 @@
 {
     "name": "slight dent in the back",
-    "desc": "gives you 30 extra minuits to do the daily @everyone. all im asking is 500 dollars",
-    "price": 500,
+    "desc": "gives you 2 extra hours to do the daily @everyone. all im asking is 7000 dollars",
+    "price": 7000,
     "qty": -1,
     "imageLink": "https://media.discordapp.net/attachments/1173129325176963103/1198694883112779948/Screenshot_2024-01-21_001115.png?ex=65bfd69a&is=65ad619a&hm=4a3f240e06953d6f54bf351ffaa90e29cf8382e3904659a7753ef5f7599e5d27&=&format=webp&quality=lossless&width=747&height=656",
     "action": {
         "name": "dailyTime",
         "data": {
-            "time": 30
+            "time": 120
         }
     },
     "owner": 0,

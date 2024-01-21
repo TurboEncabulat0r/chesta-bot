@@ -307,7 +307,7 @@ async def shop(ctx, item_name:str=None, page:int=1):
         if item == None:
             await ctx.respond(f"Item {item_name} not found", ephemeral=True)
         else:
-            await ctx.respond(embed=item.toEmbed(), ephemeral=True)
+            await ctx.respond(embed=item.toEmbed())
 
 
 
@@ -354,7 +354,7 @@ async def buy(ctx, item_name:str, qty:int=1):
     item = getItem(item_name)
     if item == None:
         embed = discord.Embed(title="Shop", description=f"Item `{item_name}` not found", color=0x00ff00)
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=True)
     else:
         if item.qty < qty and item.qty != -1:
             embed = discord.Embed(title="Shop", description="Not enough stock", color=0x00ff00)
@@ -368,7 +368,7 @@ async def buy(ctx, item_name:str, qty:int=1):
                 item.qty -= qty
             saveItemByName(item.name)
             embed = discord.Embed(title="Shop", description=f"GMFD! {qty}x**{item.name}** bought for `{item.price * qty}`", color=0x00ff00)
-            await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed)
 
 
 @client.slash_command(guild_ids=[guild])
@@ -384,7 +384,7 @@ async def sell(ctx, item_name:str, qty:int=1):
                 item.qty += qty
             saveItemByName(item.name)
             embed = discord.Embed(title="Shop", description=f"GMFD! {qty}x**{item.name}** sold for `{item.price * qty}`", color=0x00ff00)
-            await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed)
         else:
             embed = discord.Embed(title="Shop", description=f"Invalid qty", color=0x00ff00)
             await ctx.respond(embed=embed, ephemeral=True)
@@ -414,7 +414,7 @@ async def additem(ctx, name:str, desc:str, price:int, qty:int, alias:str, image:
     items.append(item)
     saveItems()
     embed = discord.Embed(title="Shop", description=f"Item `{name}` added", color=0x00ff00)
-    await ctx.respond(embed=embed, ephemeral=True)
+    await ctx.respond(embed=embed)
 
 @client.slash_command(guild_ids=[guild])
 async def removeitem(ctx, name:str):
