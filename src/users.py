@@ -205,7 +205,7 @@ def resetAtEveryone():
         user.hasAtEveryoed = False
 
 @client.slash_command(guild_ids=[guild])
-async def getpoints(ctx, user: discord.Member = None):
+async def balance(ctx, user: discord.Member = None):
     if user == None:
         user = ctx.author
     if userInList(user.id):

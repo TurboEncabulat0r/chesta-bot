@@ -314,7 +314,7 @@ async def on_message(message):
         return
     user = users.getUser(message.author.id)
 
-    n = random.randint(0, 200)
+    n = random.randint(0, 160)
     if n < 5 + user.onMessageChance:
         pts = 5 + user.onMsgPtsBonus
         users.grantPoints(message.author.id, pts)
@@ -370,7 +370,7 @@ async def on_message(message):
     await client.process_commands(message)
 
 @client.slash_command(guild_ids=[guild])
-async def getuserstats(ctx):
+async def stats(ctx):
     user = users.getUser(ctx.author.id)
     embed = discord.Embed(title="Stats", description=f"Your stats are:", color=0x00ff00)
     embed.add_field(name="Points", value=f"`{user.points}`", inline=True)
