@@ -108,7 +108,7 @@ def atExit():
         except:
             user.addArbitraryData("vcTime", 0) 
         user.setArbitrayData("vcTime", round(d + timeInVC, 2))
-    users.saveUsers()
+    users.saveUserData()
 
 atexit.register(atExit)
 

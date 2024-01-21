@@ -1,0 +1,18 @@
+{
+    "name": "Super D Bad Boy Album",
+    "desc": "god mf damn this bitch generates 10 pts p day",
+    "price": 500,
+    "qty": -1,
+    "imageLink": "https://i.redd.it/lvhsfzj0jgh61.png",
+    "action": {
+        "name": "generatePtsPerDay",
+        "data": {
+            "pts": 10
+        }
+    },
+    "owner": 0,
+    "alias": [
+        "album",
+        "sdbba"
+    ]
+}

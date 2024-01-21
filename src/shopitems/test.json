@@ -1,0 +1,12 @@
+{
+    "name": "test",
+    "desc": "test item",
+    "price": 5,
+    "qty": 9,
+    "imageLink": "https://tenor.com/view/golden-freddy-golden-freddy-jumpscare-golden-freddy-clapping-gif-26121877",
+    "action": {},
+    "owner": 422488203446976513,
+    "alias": [
+        "t"
+    ]
+}

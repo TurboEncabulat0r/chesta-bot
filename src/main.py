@@ -58,6 +58,7 @@ import users
 #import stocks
 import gambling
 import vcimpl
+import shop
 
 async def watchForUserUpdate():
     # checks every 10 seconds if the user is offline, if so applies the inactive role
@@ -346,6 +347,7 @@ async def on_ready():
     asyncio.create_task(watchForUserUpdate())
     asyncio.create_task(ScheduleTimedAtEveryone())
     asyncio.create_task(vcimpl.vcScanner())
+    await shop.initialize()
 
 
 def atExit():

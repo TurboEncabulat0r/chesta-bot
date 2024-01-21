@@ -19,6 +19,10 @@ class User():
 
         self.points = 0
         self.hasAtEveryoed = False
+        self.onMessageChance = 0
+        self.onMsgPtsBonus = 0
+        self.dailyBonus = 0
+        self.vcRewardsBonus = 0
         self.rawJson = None
         self.data = {}
     
@@ -28,9 +32,7 @@ class User():
             self.data[key] = value
             return
         d = {key : value}
-        print("adding")
         self.data.update(d)
-        print(self.data)
 
     def setArbitrayData(self, key, value):
         self.addArbitraryData(key, value)
@@ -52,6 +54,15 @@ class User():
     def removePoints(self, points):
         self.points -= points
 
+        
+    def setBonusValues(self, d):
+        self.onMessageChance = d["onMessageChance"]
+        self.onMsgPtsBonus = d["onMessagePts"]
+        self.dailyBonus = d["dailyBonus"]
+        self.vcRewardsBonus = d["vcRewards"]
+        self.dailyTime = d["dailyTime"]
+        
+
     def initFromJson(self, json):
         self.points = json['points']
         self.id = json['id']
@@ -61,6 +72,7 @@ class User():
         except:
             pass
         self.rawJson = json
+
 
     def tojson(self):
         
