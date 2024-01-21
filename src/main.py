@@ -314,7 +314,7 @@ async def on_message(message):
         return
     user = users.getUser(message.author.id)
 
-    n = random.randint(0, 100)
+    n = random.randint(0, 200)
     if n < 5 + user.onMessageChance:
         pts = 5 + user.onMsgPtsBonus
         users.grantPoints(message.author.id, pts)
@@ -323,8 +323,8 @@ async def on_message(message):
         
         
     elif n == 34:
-        n = random.randint(0, 100)
-        if n < 75:
+        n1 = random.randint(0, 200)
+        if n1 < 20:
             embed = discord.Embed(title="THE RICHEST  IN THE WORLD", description=f"+500 chesta points for `{message.author.name}` @everyone", color=0x00ff00)
             await message.channel.send(embed=embed)
             users.grantPoints(message.author.id, 500)
