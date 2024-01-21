@@ -95,10 +95,10 @@ class Item():
             
         }
     
-    def payOwner(self):
+    def payOwner(self, qty):
         if self.owner != 0:
-            users.getUser(self.owner).addPoints(self.price)
-            logf(f"paid {self.owner} ${self.price} for {self.name}")
+            users.getUser(self.owner).addPoints(self.price * qty)
+            logf(f"paid {self.owner} ${self.price * qty} for {self.name}")
 
     def refund(self, user):
         # removes from owner and gives to user
@@ -326,7 +326,7 @@ def buyItem(user, item, qty):
     except:
         pass
     user.setBonusValues(getUserBonusus(user))
-    item.payOwner()
+    item.payOwner(qty)
 
 def reloadFromFiles():
     saveItems()
