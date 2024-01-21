@@ -39,6 +39,12 @@ class User():
         if (key == None):
             return self.data
         return self.data[key]
+    
+    def send(self, message):
+        try:
+            client.get_user(self.id).send(message)
+        except:
+            pass
 
     def addPoints(self, points):
         self.points += points

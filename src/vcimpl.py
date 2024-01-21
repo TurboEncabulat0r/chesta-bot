@@ -51,13 +51,13 @@ async def vc_top(ctx):
     await ctx.respond(embed=embed, ephemeral=True)
 
 vcData = []
-async def calculateAwards(user, time):
+async def calculateAwards(user:users.User, time):
     minuites = time / 60
     points = round(minuites / 2)
     user.addPoints(points)
     logf(f"awarded {points} points to {user.name} for {formatTime(time)} in vc")
     if (points > 30):
-        await dmUser(client.get_user(user.id), f"You have been awarded {points} points for spending {formatTime(time)} in vc")
+        await user.send(f"You were awarded {points} points for being in vc for {formatTime(time)}")
 
 async def handleMemberJoin(member, vc):
     # check if they are in vcData

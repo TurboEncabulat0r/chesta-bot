@@ -51,10 +51,14 @@ def formatTime(seconds, internal=False):
 
 
 async def dmUser(id, message, embed=False):
-    user = client.get_user(id)
-    if embed:
-        await user.send(embed=message)
-    else:
-        await user.send(message)
+    try:
+        user = client.get_user(id)
+        if embed:
+            await user.send(embed=message)
+        else:
+            await user.send(message)
+    except Exception as e:
+        logf(f"failed to dm user {id} with message {message} with error {e}")
+
 
 
