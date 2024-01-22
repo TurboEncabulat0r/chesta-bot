@@ -293,7 +293,7 @@ async def shop(ctx, item_name:str=None, page:int=1):
 
         # loops through all the owners and adds them to the embed
         for owner in owners:
-            name = "**--chesta--**" if owner == 0 else client.get_user(owner).name
+            name = "**--chesta--**" if owner == 0 else f"--{client.get_user(owner).name}--"
             value = ""
             for item in owners[owner]:
                 value += f"{item}\n"
@@ -307,7 +307,7 @@ async def shop(ctx, item_name:str=None, page:int=1):
         if item == None:
             await ctx.respond(f"Item {item_name} not found", ephemeral=True)
         else:
-            await ctx.respond(embed=item.toEmbed())
+            await ctx.respond(embed=item.toEmbed(), ephemeral=True)
 
 
 
@@ -333,7 +333,7 @@ def reloadFromFiles():
     loadItems()
 
 def sellItem(user, item, qty):
-    user.addPoints(item.price * qty)
+    user.addPoints(round(item.price * qty * 0.75))
     for i in range(qty):
         removeItemFromInventory(user, item)
 
@@ -347,7 +347,8 @@ def sellItem(user, item, qty):
         except:
             pass
     user.setBonusValues(getUserBonusus(user))
-    item.payOwner()
+    owner = users.getUser(item.owner)
+    owner.addPoints(round(-item.price * qty * 0.25))
 
 @client.slash_command(guild_ids=[guild])
 async def buy(ctx, item_name:str, qty:int=1):
