@@ -55,7 +55,7 @@ exampleAction = {"name": "example",
 itemPath = "shopitems"
 
 class Item():
-    def __init__(self, name, desc, price, qty, action, imageLink, alias, owner, ord):
+    def __init__(self, name, desc, price, qty, action, imageLink, alias, owner, ord=None):
         self.name = name
         self.desc = desc
         self.price = price
@@ -422,14 +422,23 @@ async def inventory(ctx, user:discord.User=None):
 
 @client.slash_command(guild_ids=[guild])
 async def additem(ctx, name:str, desc:str, price:int, qty:int, alias:str, image:str):
+    # charges user for 50 percent of item cost * qty
     if getItem(name) != None:
         await ctx.respond("item already exists", ephemeral=True)
         return
+    cost = round(price * qty * 0.5)
+    if users.getUser(ctx.author.id).points < cost:
+        await ctx.respond(f"not enough points, you need {cost} points", ephemeral=True)
+        return
+    users.getUser(ctx.author.id).removePoints(cost)
+
 
     item = Item(name, desc, price, qty, {}, image, alias.split(","), ctx.author.id)
     items.append(item)
     saveItems()
-    embed = discord.Embed(title="Shop", description=f"Item `{name}` added", color=0x00ff00)
+    embed = discord.Embed(title="Shop", description=f"Item `{name}` added, cost ${cost}", color=0x00ff00)
+    
+    
     await ctx.respond(embed=embed)
 
 @client.slash_command(guild_ids=[guild])
