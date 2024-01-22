@@ -55,7 +55,7 @@ exampleAction = {"name": "example",
 itemPath = "shopitems"
 
 class Item():
-    def __init__(self, name, desc, price, qty, action, imageLink, alias, owner):
+    def __init__(self, name, desc, price, qty, action, imageLink, alias, owner, ord):
         self.name = name
         self.desc = desc
         self.price = price
@@ -64,6 +64,7 @@ class Item():
         self.imageLink = imageLink
         self.owner = owner
         self.alias = alias
+        self.ord = ord
 
     def __str__(self):
         return f"**{self.name}** : `{self.price}`"
@@ -91,7 +92,8 @@ class Item():
             "imageLink": self.imageLink,
             "action": self.action,
             "owner": self.owner,
-            "alias": self.alias
+            "alias": self.alias,
+            "ord": self.ord
             
         }
     
@@ -279,6 +281,19 @@ async def shop(ctx, item_name:str=None, page:int=1):
             break
 
     owners = {}
+
+    # sorts them by ord key. if the id of it belongs to chesta it will be 0
+    for i in items:
+        if (i.owner == 0):
+            i.ord = -1
+        elif (i.owner == 301069013063172108):
+            i.ord = 1
+        else:
+            i.ord = 5
+
+
+    itemsOnPage.sort(key=lambda x: x.ord)
+
 
     if item_name == None:
 
