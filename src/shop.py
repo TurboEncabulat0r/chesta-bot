@@ -293,7 +293,7 @@ async def shop(ctx, item_name:str=None, page:int=1):
 
         # loops through all the owners and adds them to the embed
         for owner in owners:
-            name = "**==chesta==**" if owner == 0 else f"--{client.get_user(owner).name}--"
+            name = "**--chesta--**" if owner == 0 else f"{client.get_user(owner).name}"
             value = ""
             for item in owners[owner]:
                 value += f"{item}\n"
