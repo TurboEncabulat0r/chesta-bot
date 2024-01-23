@@ -273,6 +273,7 @@ if (builtins.debug):
         await ctx.respond(embed=embed, ephemeral=True)
 
 
+
 async def ScheduleTimedAtEveryone():
     global lastSend, nextSend
     while True:
