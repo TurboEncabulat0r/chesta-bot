@@ -21,7 +21,8 @@ commands:
     inventory - shows the users inventory
     additem <name> <desc> <price> <qty> <image> - adds an item to the shop
     removeitem <name> - removes an item from the shop
-    stock <item> <qty> - changes the stock of an item
+    stock <item> <qty> - changes the stock of an item [ IN DEV ]
+    alias <item> ?<alias> - adds an alias to an item [ IN DEV ]
 
 actions:
 generatePtsPerDay
@@ -268,7 +269,7 @@ def addPtsPerDay(user : users.User, pts):
 @client.slash_command(guild_ids=[guild])
 async def shop(ctx, item_name:str=None, page:int=1):
     pages = len(items) // 20 + 1
-    embed = discord.Embed(title=f"Shop ({page}/{pages})", description="The shop has the following items:", color=0x00ff00)
+    embed = discord.Embed(title=f"Shop ({page}/{pages}) [Use /shop <item> for info!]", description="The shop has the following items:", color=0x00ff00)
     
     embed.set_footer(text=f"[chesta shop v1.0]  |  /shop <item> for more info  |  /shop <page> to navigate")
 
@@ -308,7 +309,11 @@ async def shop(ctx, item_name:str=None, page:int=1):
 
         # loops through all the owners and adds them to the embed
         for owner in owners:
-            name = "**--chesta--**" if owner == 0 else f"{client.get_user(owner).name}"
+            name = "UNKNOWN"
+            try:
+                name = "**--chesta--**" if owner == 0 else f"--{client.get_user(owner).name}--"
+            except:
+                pass
             value = ""
             for item in owners[owner]:
                 value += f"{item}\n"
@@ -451,6 +456,24 @@ async def removeitem(ctx, name:str):
         saveItems()
         await ctx.respond("item removed", ephemeral=True)
 
+@client.slash_command(guild_ids=[guild], description="views item ailiases/adds an alias to an item")
+async def itemalias(ctx, name:str, alias:str=None):
+    item = getItem(name)
+    if item == None:
+        await ctx.respond("item not found", ephemeral=True)
+    else:
+        if alias == None:
+            embed = discord.Embed(title="Itemalias", description=f"Item `{item.name}` has the following aliases:", color=0x00ff00)
+            v = ""
+            for a in item.alias:
+                v += f"`{a}`,"
+            embed.add_field(name="Aliases", value=v)
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            item.alias.append(alias)
+            saveItemByName(item.name)
+            await ctx.respond(f"added alias `{alias}` to `{item.name}`", ephemeral=True)
+
 @client.slash_command(guild_ids=[guild])
 async def shophelp(ctx, args:str=None):
     if args == None:
@@ -492,6 +515,12 @@ async def shophelp(ctx, args:str=None):
         embed.add_field(name="price", value="the price of the item")
         embed.add_field(name="qty", value="the quantity of the item")
         embed.add_field(name="image", value="the image link of the item")
+        await ctx.respond(embed=embed, ephemeral=True)
+    elif args == "itemailias":
+        embed = discord.Embed(title="Itemalias", description="view item ailiases, or adds an alias to an item", color=0x00ff00)
+        embed.add_field(name="Usage", value="/itemalias <item> ?<alias>")
+        embed.add_field(name="item", value="the item to add an alias to")
+        embed.add_field(name="alias", value="the alias to add")
         await ctx.respond(embed=embed, ephemeral=True)
     else:
         item = getItem(args)

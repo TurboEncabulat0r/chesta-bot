@@ -293,8 +293,6 @@ def fastForward(h, m, s):
     nextSend -= m * 60
     nextSend -= s
     saveAteveryoneTime()
-    usersLeft = 5
-    users.resetAtEveryone()
 
 
 usersLeft = 5
@@ -315,8 +313,8 @@ async def on_message(message):
     user = users.getUser(message.author.id)
 
     n = random.randint(0, 160)
-    if n < 5 + user.onMessageChance:
-        pts = 5 + user.onMsgPtsBonus
+    if n < 6 + user.onMessageChance:
+        pts = 20 + user.onMsgPtsBonus
         users.grantPoints(message.author.id, pts)
         embed = discord.Embed(title="Points", description=f"+{pts} chesta points for `{message.author.name}`", color=0x00ff00)
         await message.channel.send(embed=embed)
@@ -327,10 +325,12 @@ async def on_message(message):
         if n1 < 20:
             embed = discord.Embed(title="THE RICHEST  IN THE WORLD", description=f"+500 chesta points for `{message.author.name}` @everyone", color=0x00ff00)
             await message.channel.send(embed=embed)
-            users.grantPoints(message.author.id, 500)
+            users.grantPoints(message.author.id, 500 + user.onMsgPtsBonus)
 
     if (time.time() - lastSend >= getUserAtEveryoneTolerance(user)):
         usersLeft = 5
+        # resets anyones streak if hasAtEveryoed is false
+
     
     # if the message contains @everyone
     if "@everyone" in message.content:
@@ -359,9 +359,25 @@ async def on_message(message):
             elif (usersLeft == 1):
                 points = 10
 
+            user = users.getUser(message.author.id)
+
+            try:
+                streak = user.getArbitraryData("streak")
+            except:
+                streak = 0
+                user.addArbitraryData("streak", 1)
+
+            points += streak * 10
+            user.addArbitraryData("streak", streak + 1)
+
             points += user.dailyBonus
-            usersLeft -= 1
-            embed = discord.Embed(title="Points", description=f"+{points} chesta points for `{message.author.name}`", color=0x00ff00)
+            m = f"+{points} chesta points for `{message.author.name}`"
+
+            if (streak > 0):
+                m += f" (streak bonus: {streak * 10})"
+
+            #usersLeft -= 1
+            embed = discord.Embed(title="Points", description=m, color=0x00ff00)
 
             await message.channel.send(embed=embed)
             users.grantPoints(message.author.id, points)

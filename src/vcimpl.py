@@ -49,11 +49,13 @@ async def vc_top(ctx):
     for i in range(len(top)):
         embed.add_field(name=f"{i + 1}. {top[i]['name']}", value=f"`{formatTime(top[i]['time'])}`", inline=True)
     await ctx.respond(embed=embed, ephemeral=True)
+
+    
 baseRate = 30
 vcData = []
 async def calculateAwards(user:users.User, time):
     # calculates the world based on the time in the vc and the base rate per hour
-    points = round(time / 3600 * (30 + user.vcRewardsBonus), 2)
+    points = round(time / 3600 * (30 + user.vcRewardsBonus))
 
     user.addPoints(points)
     logf(f"awarded {points} points to {user.name} for {formatTime(time)} in vc")

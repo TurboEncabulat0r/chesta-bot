@@ -199,10 +199,25 @@ async def pay(ctx, user:discord.User, ammount:int):
         embed = discord.Embed(title="Points", description=f"You don't have enough chesta points", color=0x00ff00)
         await ctx.respond(embed=embed, ephemeral=True)
 
+
+lastExec = 0
 def resetAtEveryone():
     global users
+    
+
     for user in users:
-        user.hasAtEveryoed = False
+        if (user.hasAtEveryoed):
+            user.hasAtEveryoed = False
+        else:
+            try:
+                s = user.getArbitraryData("streak")
+                user.setArbitrayData("streak", 0)
+                if (s > 5):
+                    logf(f"reset streak of {user.name} from {s} to 0")
+                    dmUser(user.id, f"god motherfuckin damn you dun just missed the bus, yo streak of {s} is gone my n")
+            except:
+                pass
+            
 
 @client.slash_command(guild_ids=[guild])
 async def balance(ctx, user: discord.Member = None):
