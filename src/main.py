@@ -82,6 +82,9 @@ except:
 
 
 builtins.guild = guild
+builtins.timeOffset = 0
+if (not builtins.debug):
+    builtins.timeOffset = (7 * 60) * 60
 import users
 
 # import all modules here
@@ -255,8 +258,8 @@ def getWaitTime():
     # gets how many seconds we need to wait untill 12pm the next day cst
     t = time.time()
     t = datetime.datetime.fromtimestamp(t)
-    t = t.replace(hour=12, minute=0, second=0, microsecond=0)
-    t = t.timestamp()
+    t = t.replace(hour=random.randint(12, 19), minute=0, second=0, microsecond=0)
+    t = t.timestamp() + builtins.timeOffset
     if (t < time.time()):
         t += 86400
     return t - time.time()

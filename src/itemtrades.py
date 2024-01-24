@@ -25,7 +25,6 @@ commands:
 
 """
 
-
 class Trade():
     def __init__(self, user):
         self.user = user
@@ -35,4 +34,5 @@ class Trade():
         self.accepted = False
         self.sent = False
         self.completed = False
+        self.message = None
         self.id = random.randint(0, 100000)
