@@ -266,7 +266,7 @@ def addPtsPerDay(user : users.User, pts):
         user.data["ptsPerDay"] = pts
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def shop(ctx, item_name:str=None, page:int=1):
     pages = len(items) // 20 + 1
     embed = discord.Embed(title=f"Shop ({page}/{pages}) [Use /shop <item> for info!]", description="The shop has the following items:", color=0x00ff00)
@@ -370,7 +370,7 @@ def sellItem(user, item, qty):
     owner = users.getUser(item.owner)
     owner.addPoints(round(-item.price * qty * 0.25))
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def buy(ctx, item_name:str, qty:int=1):
     item = getItem(item_name)
     if item == None:
@@ -392,7 +392,7 @@ async def buy(ctx, item_name:str, qty:int=1):
             await ctx.respond(embed=embed)
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def sell(ctx, item_name:str, qty:int=1):
     item = getItem(item_name)
     if item == None:
@@ -411,7 +411,7 @@ async def sell(ctx, item_name:str, qty:int=1):
             await ctx.respond(embed=embed, ephemeral=True)
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def inventory(ctx, user:discord.User=None):
     if user == None:
         user = users.getUser(ctx.author.id)
@@ -425,13 +425,32 @@ async def inventory(ctx, user:discord.User=None):
         embed.add_field(name=item["name"], value=f"**{item['qty']}**", inline=False)
     await ctx.respond(embed=embed, ephemeral=True)
 
-@client.slash_command(guild_ids=[guild])
+def getItemTax(itemPrice, amm, tax = 0.7):
+    return round(itemPrice * amm * tax)
+
+
+@client.slash_command(guild=client.get_guild(guild))
+async def stockitem(ctx, item_name:str, qty:int):
+    item = getItem(item_name)
+    if item == None:
+        await ctx.respond("item not found", ephemeral=True)
+    else:
+        # checks if user owns the item
+        if item.owner != ctx.author.id:
+            await ctx.respond("you don't own this item", ephemeral=True)
+        else:
+            item.qty = qty
+            saveItemByName(item.name)
+            tax = getItemTax(item.price, qty)
+            await ctx.respond(f"stock set to {qty}, tax is ${tax}", ephemeral=True)
+
+
+@client.slash_command(guild=client.get_guild(guild))
 async def additem(ctx, name:str, desc:str, price:int, qty:int, alias:str, image:str):
-    # charges user for 50 percent of item cost * qty
     if getItem(name) != None:
         await ctx.respond("item already exists", ephemeral=True)
         return
-    cost = round(price * qty * 0.5)
+    cost = getItemTax(price, qty)
     if users.getUser(ctx.author.id).points < cost:
         await ctx.respond(f"not enough points, you need {cost} points", ephemeral=True)
         return
@@ -446,7 +465,7 @@ async def additem(ctx, name:str, desc:str, price:int, qty:int, alias:str, image:
     
     await ctx.respond(embed=embed)
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def removeitem(ctx, name:str):
     item = getItem(name)
     if item == None:
@@ -456,7 +475,7 @@ async def removeitem(ctx, name:str):
         saveItems()
         await ctx.respond("item removed", ephemeral=True)
 
-@client.slash_command(guild_ids=[guild], description="views item ailiases/adds an alias to an item")
+@client.slash_command(guild=client.get_guild(guild), description="views item ailiases/adds an alias to an item")
 async def itemalias(ctx, name:str, alias:str=None):
     item = getItem(name)
     if item == None:
@@ -474,7 +493,7 @@ async def itemalias(ctx, name:str, alias:str=None):
             saveItemByName(item.name)
             await ctx.respond(f"added alias `{alias}` to `{item.name}`", ephemeral=True)
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def shophelp(ctx, args:str=None):
     if args == None:
         embed = discord.Embed(title="Shop", description="The shop has the following commands:", color=0x00ff00)

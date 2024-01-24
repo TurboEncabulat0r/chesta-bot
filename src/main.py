@@ -105,7 +105,7 @@ async def watchForUserUpdate():
         lastStatus = member.status
         await asyncio.sleep(offlineTimeout)
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def dev(ctx, args:str):
     if (ctx.author.id not in adminId):
         return
@@ -207,7 +207,7 @@ async def dev(ctx, args:str):
         await ctx.respond("invalid command", ephemeral=True)
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def handouts(ctx, ammount:int, message:str = None):
     if (ctx.author.id not in adminId):
         return
@@ -243,7 +243,7 @@ async def activate(ctx, pswd:int):
     
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def getnext(ctx):
     embed = discord.Embed(title="Next @everyone", description="The next @everyone will be sent at:", color=0x00ff00)
     embed.add_field(name="Time", value=f"`{formatTime(nextSend - time.time())}`", inline=True)
@@ -263,7 +263,7 @@ def getWaitTime():
 
 
 if (builtins.debug):
-    @client.slash_command(guild_ids=[guild])
+    @client.slash_command(guild=client.get_guild(guild))
     async def recalctime(ctx):
         global nextSend
         nextSend = getWaitTime() + time.time()
@@ -404,7 +404,7 @@ async def stats(ctx):
         pass
     await ctx.respond(embed=embed, ephemeral=True)
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def reload(ctx):
     if (ctx.author.id not in adminId):
         return

@@ -68,7 +68,7 @@ class User():
         
 
     def initFromJson(self, json):
-        self.points = json['points']
+        self.points = int(round(json['points']))
         self.id = json['id']
         self.name = client.get_user(self.id).name
         try:
@@ -172,7 +172,7 @@ def grantPoints(id, points):
 
     saveUserData()
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def pay(ctx, user:discord.User, ammount:int):
     if userInList(ctx.author.id):
         if (ctx.author.id == user.id):
@@ -219,7 +219,7 @@ def resetAtEveryone():
                 pass
             
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def balance(ctx, user: discord.Member = None):
     if user == None:
         user = ctx.author
@@ -231,7 +231,7 @@ async def balance(ctx, user: discord.Member = None):
         await ctx.respond(embed=embed, ephemeral=True)
 
 
-@client.slash_command(guild_ids=[guild])
+@client.slash_command(guild=client.get_guild(guild))
 async def top(ctx):
     embed = discord.Embed(title="Top", description="Top 5 chesta points", color=0x00ff00)
     # returns a soted list of users by points
@@ -257,7 +257,7 @@ async def top(ctx):
     await ctx.respond(embed=embed, ephemeral=True)
 
 if (builtins.debug):
-    @client.slash_command(guild_ids=[guild])
+    @client.slash_command(guild=client.get_guild(guild))
     async def setpoints(ctx, user : discord.Member, points:int):
 
 
