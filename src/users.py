@@ -70,7 +70,11 @@ class User():
     def initFromJson(self, json):
         self.points = int(round(json['points']))
         self.id = json['id']
-        self.name = client.get_user(self.id).name
+        try:
+            self.name = client.get_user(self.id).name
+        except:
+            self.name = "Unknown"
+            logf("unknown user " + str(self.id))
         try:
             self.data = json['data']
         except:
