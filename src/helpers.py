@@ -37,7 +37,6 @@ def logf(str, args = None):
     savedLogs.append(msg)
 
 def formatTime(seconds, internal=False):
-    seconds -= builtins.timeOffset
     if internal:
             hours = int(seconds // 3600)
             seconds -= hours * 3600
