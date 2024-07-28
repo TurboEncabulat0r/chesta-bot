@@ -67,6 +67,16 @@ try:
         atEveryoneChannel = config['atEveryoneChannel']
 except:
     logf("Error loading config.json, rewriting defaults", "w")
+    ans = input ("confirm rewrite y/n: ")
+    if (ans != "y"):
+        exit()
+    token = input("token: ")
+    userId = int(input("user to watch: "))
+    guild = int(input("active guild: "))
+    inactiveRole = int(input("user inactive role: "))
+    offlineTimeout = int(input("user offline timeout: "))
+    atEveryoneChannel = int(input("channel to send @everyone: "))
+
     with open('config.json', 'w') as f:
         config = {
             "token": token,

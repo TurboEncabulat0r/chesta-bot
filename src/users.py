@@ -8,6 +8,7 @@ client = builtins.client
 
 users = []
 
+
 class User():
     def __init__(self, id):
         self.id = id
